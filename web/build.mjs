@@ -29,11 +29,25 @@ if (fs.existsSync(pngPath)) {
   appleIcon = "data:image/png;base64," + fs.readFileSync(pngPath).toString("base64");
 }
 
+const stamp = (() => {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return (
+    d.getFullYear() +
+    p(d.getMonth() + 1) +
+    p(d.getDate()) +
+    "-" +
+    p(d.getHours()) +
+    p(d.getMinutes())
+  );
+})();
+
 const out = shell
   .replace("/*__CSS__*/", () => css)
   .replace("/*__JS__*/", () => parts)
   .replace("__FAVICON__", () => favicon || "data:,")
-  .replace("__APPLE_ICON__", () => appleIcon || "data:,");
+  .replace("__APPLE_ICON__", () => appleIcon || "data:,")
+  .replace(/__BUILD__/g, () => stamp);
 
 const dest = path.join(here, "..", "dist", "index.html");
 fs.writeFileSync(dest, out, "utf8");

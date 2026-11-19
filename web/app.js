@@ -7,6 +7,7 @@
   /* ========== 基础工具 ========== */
   const DAY = 86400000;
   const KEY = "eyc_v1";
+  const BUILD = "__BUILD__";
 
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = (s) =>
@@ -1604,7 +1605,9 @@
       '<div class="set-row"><div><div class="set-label">清空所有数据</div>' +
       '<div class="set-desc">进度、打卡、词表全部删除，无法恢复。</div></div>' +
       '<div class="set-control"><button class="btn btn-danger" data-act="reset">清空</button></div></div>' +
-      "</div>"
+      "</div>" +
+      '<div style="text-align:center;margin-top:18px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">' +
+      "记忆卡片盒 v1.0 · 构建 " + BUILD + "</div>"
     );
   }
 
