@@ -252,7 +252,7 @@ function buildQueue(extraNew) {
     reviews[i] = reviews[j];
     reviews[j] = t;
   }
-  const quota = Math.max(0, S.set.dailyNew + (extraNew || 0) - d.newW);
+  const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
   const news = freshWords.slice(0, quota);
 
   const q = [];

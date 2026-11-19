@@ -44,7 +44,7 @@ Page({
     const pctMin = Math.min(sec / 60, S.set.targetMin) / Math.max(1, S.set.targetMin);
     const pct = Math.round((pctNew * 0.7 + pctMin * 0.3) * 100);
 
-    const totalLeft = Math.max(0, goal - d.newW) + due;
+    const totalLeft = due + goal;
 
     this.setData({
       coachText: this.coachLine(d, due, learned, goal),
@@ -58,7 +58,7 @@ Page({
       streak: store.streak(),
       learned: learned,
       totalLeft: totalLeft,
-      ctaText: totalLeft > 0 ? "开始学习 · 剩 " + totalLeft + " 张" : "再练 10 个",
+      ctaText: due > 0 ? "开始学习 · 复习 " + due + " + 新词 " + goal : "开始学习 · 新词 " + goal,
       loaded: true,
     });
   },
@@ -77,10 +77,10 @@ Page({
       return "已经背了 " + d.newW + " 个，还差 " + (goal - d.newW) + " 个。别停在半路 —— 一停，前面这些就白背了。";
     }
     if (due > 0) return "新词够了。但还有 " + due + " 个词到期没复习。复习比学新词值钱。";
-    return "今天全部完成。明天见 —— 隔天再看一遍，比今天多背 10 个有用。";
+    return "今天标准（" + goal + " 个新词）已经完成了。想接着背就点下面的按钮，不想就明天见。";
   },
 
   onStart() {
-    wx.navigateTo({ url: "/pages/study/study?extra=" + (this.data.totalLeft > 0 ? 0 : 10) });
+    wx.navigateTo({ url: "/pages/study/study?extra=0" });
   },
 });

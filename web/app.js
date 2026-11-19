@@ -673,7 +673,6 @@
 
   function buildQueue(extraNew) {
     const now = Date.now();
-    const d = day();
     const reviews = [];
     const fresh = [];
     for (let i = 0; i < ALL.length; i++) {
@@ -683,7 +682,8 @@
       else if (p.due <= now) reviews.push(w);
     }
     shuffle(reviews);
-    const quota = Math.max(0, S.set.dailyNew + (extraNew || 0) - d.newW);
+    /* dailyNew 是每轮的配给量，不是每日上限 —— 想多学随时再开一轮 */
+    const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
     const news = fresh.slice(0, quota);
     const q = [];
     let i = 0;
@@ -945,7 +945,7 @@
       return '新词够了。但还有 <span class="red">' + due + "</span> 个词到期没复习。复习比学新词值钱。";
     }
     return (
-      "今天全部完成，专注 <em>" + Math.round(d.sec / 60) + "</em> 分钟。明天见 —— 隔天再看一遍，比今天多背 10 个有用。"
+      "今天标准（" + goal + " 个新词）已经完成了。想接着背就点上面的按钮，不想就明天见 —— 明天我会把该复习的先端上来。"
     );
   }
 
@@ -1110,16 +1110,19 @@
       clamp(Math.min(d.newW, goal) / Math.max(1, goal), 0, 1) * 0.7 +
       clamp(d.sec / 60 / Math.max(1, S.set.targetMin), 0, 1) * 0.3;
     const st = streak();
-    const remainNew = Math.max(0, goal - d.newW);
-    const totalLeft = remainNew + due;
+    const quota = S.set.dailyNew;
 
     const coach =
       '<div class="coach rise">' +
       '<div class="coach-avatar">雅</div>' +
       '<div class="coach-body"><div class="coach-name">小雅 · 学习监督</div>' +
       '<div class="coach-msg">' + coachLine() + "</div></div>" +
-      '<button class="btn btn-primary btn-lg" data-act="' + (totalLeft > 0 ? "start" : "extra") + '">' +
-      (totalLeft > 0 ? (isNarrow() ? "开始学习" : "开始学习 · 剩余 " + totalLeft + " 张") : "再练 10 个") +
+      '<button class="btn btn-primary btn-lg" data-act="start">' +
+      (isNarrow()
+        ? "开始学习"
+        : due > 0
+        ? "开始学习 · 复习 " + due + " + 新词 " + quota
+        : "开始学习 · 新词 " + quota) +
       "</button></div>";
 
     const map =
@@ -1150,14 +1153,13 @@
       '<span class="panel-hint">' + todayKey() + "</span></div>" +
       '<div class="ring-row">' + ringSVG(pct) +
       '<div class="task-list">' +
-      taskRow(d.newW >= goal, "新词", Math.min(d.newW, goal) + " / " + goal) +
+      taskRow(d.newW >= goal, "新词", d.newW + " / " + goal) +
       taskRow(due === 0, "到期复习", due === 0 ? "已清空" : "剩 " + due + " 个") +
       taskRow(Math.round(d.sec / 60) >= S.set.targetMin, "专注", Math.round(d.sec / 60) + " / " + S.set.targetMin + " 分") +
       taskRow(st > 0, "连续打卡", st + " 天") +
       "</div></div>" +
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
-      '<button class="btn btn-primary" data-act="' + (totalLeft > 0 ? "start" : "extra") + '">' +
-      (totalLeft > 0 ? "继续" : "额外 10 个") + "</button>" +
+      '<button class="btn btn-primary" data-act="start">开始学习</button>' +
       '<button class="btn" data-act="spell-toggle">拼写测试：' + (S.set.spelling ? "开" : "关") + "</button>" +
       "</div></section>";
 

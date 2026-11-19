@@ -108,6 +108,7 @@ const variants = {
   "settings-locked": `document.querySelector('[data-act=go][data-view=settings]').click();`,
   "quiz-choice": `document.querySelector('[data-act=start]').click();`,
   "quiz-cloze": `document.querySelector('[data-act=start]').click();`,
+  "today-over": ``,
   spell: `document.querySelector('[data-act=start]').click();`,
   flow: `
     var out = [];
@@ -148,12 +149,25 @@ const variants = {
     }, 600);`,
 };
 
+/* 超额完成：今天已学 26 个新词（目标 20） */
+const overState = JSON.parse(JSON.stringify(state));
+const todayK = ymd(new Date());
+if (overState.daily[todayK]) {
+  overState.daily[todayK].newW = 26;
+  overState.daily[todayK].cards = 31;
+  overState.daily[todayK].sec = 1620;
+}
+
 const seeds = {
   first: "<script>try{localStorage.clear()}catch(e){}</script>",
   spell: seedSpell,
   "settings-locked": seedSynced,
   "quiz-choice": quizSeed("choice"),
   "quiz-cloze": quizSeed("cloze"),
+  "today-over":
+    "<script>try{localStorage.setItem('eyc_v1'," +
+    JSON.stringify(JSON.stringify(overState)) +
+    ")}catch(e){}</script>",
 };
 
 let n = 0;
