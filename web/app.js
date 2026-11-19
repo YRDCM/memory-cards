@@ -53,7 +53,7 @@
     targetMin: 25,
     reminder: "20:30",
     spelling: false,
-    rate: 0.9,
+    rate: 1,
     deck: "all",
     quiz: "card",
     syncCode: "",
@@ -87,6 +87,7 @@
       const base = freshState();
       const set = Object.assign({}, base.set, s.set || {});
       if (["all", "A", "B", "C", "M"].indexOf(set.deck) < 0) set.deck = "all";
+      if ([0.6, 0.8, 1, 1.3].indexOf(Number(set.rate)) < 0) set.rate = 1;
       return {
         v: 1,
         prog: s.prog || {},
@@ -507,101 +508,44 @@
     }
   }
 
-  /* ========== 发音 ========== */
-  let voices = [];
-  let voicesLoaded = false;
-  function loadVoices() {
-    if (!("speechSynthesis" in window)) return;
-    try {
-      voices = window.speechSynthesis.getVoices() || [];
-      if (voices.length) voicesLoaded = true;
-    } catch (e) {
-      voices = [];
-    }
-  }
-  if ("speechSynthesis" in window) {
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-  }
-
+  /* ========== 发音（统一走在线音频，不依赖系统语音） ========== */
+  const SPEAK_BASE = "https://dict.youdao.com/dictvoice?type=2&audio=";
+  let audioEl = null;
   let lastErrAt = 0;
 
-  /* 系统语音不出声时的兜底：拉一个有道的发音音频直接播 */
-  function speakViaAudio(text) {
+  function audio() {
+    if (audioEl) return audioEl;
+    audioEl = new Audio();
+    audioEl.preload = "auto";
+    audioEl.addEventListener("error", function () {
+      if (!audioEl.src) return;
+      if (Date.now() - lastErrAt < 5000) return;
+      lastErrAt = Date.now();
+      toast("发音加载失败，检查一下网络", "warn");
+    });
+    return audioEl;
+  }
+
+  function speak(text) {
+    const word = String(text || "").trim();
+    if (!word) return;
+    const a = audio();
+    const rate = clamp(Number(S.set.rate) || 1, 0.5, 1.6);
     try {
-      const url =
-        "https://dict.youdao.com/dictvoice?type=2&audio=" + encodeURIComponent(String(text).slice(0, 180));
-      const a = new Audio(url);
-      a.volume = 1;
+      a.pause();
+      a.currentTime = 0;
+      a.src = SPEAK_BASE + encodeURIComponent(word.slice(0, 120));
+      a.playbackRate = rate;
+      a.preservesPitch = true; /* 慢放时保持音调，听得清本来怎么读 */
       const p = a.play();
       if (p && p.catch) {
         p.catch(function () {
           if (Date.now() - lastErrAt < 5000) return;
           lastErrAt = Date.now();
-          toast("发音失败：浏览器拦截了播放，点一下页面再试", "warn");
+          toast("浏览器拦截了播放，再点一下", "warn");
         });
       }
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function speak(text) {
-    if (!text) return;
-    if (!("speechSynthesis" in window)) {
-      if (!speakViaAudio(text)) toast("这个浏览器不支持朗读。", "warn");
-      return;
-    }
-    const synth = window.speechSynthesis;
-
-    /* 被新的一句打断时浏览器会发 canceled / interrupted，属正常 */
-    const isBenign = function (err) {
-      return err === "canceled" || err === "interrupted";
-    };
-
-    const say = function () {
-      try {
-        if (synth.paused) synth.resume();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = "en-US";
-        u.rate = clamp(Number(S.set.rate) || 0.9, 0.5, 1.5);
-        u.volume = 1;
-        const pick =
-          voices.find((v) => /en[-_]US/i.test(v.lang)) ||
-          voices.find((v) => /^en/i.test(v.lang));
-        if (pick) u.voice = pick;
-
-        let started = false;
-        u.onstart = function () {
-          started = true;
-        };
-        u.onerror = function (e) {
-          const err = (e && e.error) || "";
-          if (isBenign(err)) return;
-          /* 系统语音坏了，直接换在线发音 */
-          if (!started) speakViaAudio(text);
-        };
-        synth.speak(u);
-
-        /* 800ms 还没开口，说明系统语音这条链走不通 */
-        setTimeout(function () {
-          if (started) return;
-          if (synth.speaking && !synth.pending) return;
-          speakViaAudio(text);
-        }, 800);
-      } catch (e) {
-        speakViaAudio(text);
-      }
-    };
-
-    /* Chrome：cancel 完立刻 speak 会被吞，中间隔一帧 */
-    if (synth.speaking || synth.pending) {
-      synth.cancel();
-      setTimeout(say, 80);
-    } else {
-      say();
-    }
+    } catch (e) {}
   }
 
   function beep() {
@@ -1619,13 +1563,14 @@
       "</select></div></div>" +
 
       '<div class="set-row"><div><div class="set-label">发音速度</div>' +
-      '<div class="set-desc">慢一点，跟着读出来。会读才拼得对。</div></div>' +
+      '<div class="set-desc">在线发音，跟着读出来。会读才拼得对。</div></div>' +
       '<div class="set-control" style="display:flex;gap:8px;align-items:center">' +
       '<button class="btn" data-act="test-voice">试听</button>' +
       '<select class="field" data-set="rate" data-num="1">' +
-      '<option value="0.7"' + (Number(S.set.rate) === 0.7 ? " selected" : "") + ">慢</option>" +
-      '<option value="0.9"' + (Number(S.set.rate) === 0.9 ? " selected" : "") + ">正常</option>" +
-      '<option value="1.1"' + (Number(S.set.rate) === 1.1 ? " selected" : "") + ">快</option>" +
+      '<option value="0.6"' + (Number(S.set.rate) === 0.6 ? " selected" : "") + ">很慢</option>" +
+      '<option value="0.8"' + (Number(S.set.rate) === 0.8 ? " selected" : "") + ">慢</option>" +
+      '<option value="1"' + (Number(S.set.rate) === 1 ? " selected" : "") + ">正常</option>" +
+      '<option value="1.3"' + (Number(S.set.rate) === 1.3 ? " selected" : "") + ">快</option>" +
       "</select></div></div>" +
 
       '<div class="set-row set-row-stack"><div>' +
@@ -1771,16 +1716,7 @@
       return;
     }
     if (act === "test-voice") {
-      if (!("speechSynthesis" in window) && !voices.length) {
-        toast("这个浏览器不支持系统朗读，试听将走在线发音", "warn");
-      } else {
-        loadVoices();
-        toast(
-          "系统语音 " + voices.length + " 个（英语 " +
-            voices.filter((v) => /^en/i.test(v.lang)).length +
-            " 个）· 没声音会自动用在线发音"
-        );
-      }
+      toast("正在播放在线发音（需联网）");
       speak("hello");
       return;
     }
