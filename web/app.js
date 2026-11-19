@@ -526,16 +526,36 @@
 
   let lastErrAt = 0;
 
+  /* 系统语音不出声时的兜底：拉一个有道的发音音频直接播 */
+  function speakViaAudio(text) {
+    try {
+      const url =
+        "https://dict.youdao.com/dictvoice?type=2&audio=" + encodeURIComponent(String(text).slice(0, 180));
+      const a = new Audio(url);
+      a.volume = 1;
+      const p = a.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          if (Date.now() - lastErrAt < 5000) return;
+          lastErrAt = Date.now();
+          toast("发音失败：浏览器拦截了播放，点一下页面再试", "warn");
+        });
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function speak(text) {
     if (!text) return;
     if (!("speechSynthesis" in window)) {
-      toast("这个浏览器不支持朗读，换 Edge 或 Chrome 试试。", "warn");
+      if (!speakViaAudio(text)) toast("这个浏览器不支持朗读。", "warn");
       return;
     }
     const synth = window.speechSynthesis;
 
-    /* 被新的一句打断时浏览器会发 canceled / interrupted，
-       这是正常现象，不能当失败弹提示 */
+    /* 被新的一句打断时浏览器会发 canceled / interrupted，属正常 */
     const isBenign = function (err) {
       return err === "canceled" || err === "interrupted";
     };
@@ -551,18 +571,27 @@
           voices.find((v) => /en[-_]US/i.test(v.lang)) ||
           voices.find((v) => /^en/i.test(v.lang));
         if (pick) u.voice = pick;
+
+        let started = false;
+        u.onstart = function () {
+          started = true;
+        };
         u.onerror = function (e) {
           const err = (e && e.error) || "";
           if (isBenign(err)) return;
-          if (Date.now() - lastErrAt < 5000) return;
-          lastErrAt = Date.now();
-          toast("朗读失败：" + (err || "未知"), "warn");
+          /* 系统语音坏了，直接换在线发音 */
+          if (!started) speakViaAudio(text);
         };
         synth.speak(u);
+
+        /* 800ms 还没开口，说明系统语音这条链走不通 */
+        setTimeout(function () {
+          if (started) return;
+          if (synth.speaking && !synth.pending) return;
+          speakViaAudio(text);
+        }, 800);
       } catch (e) {
-        if (Date.now() - lastErrAt < 5000) return;
-        lastErrAt = Date.now();
-        toast("朗读出错：" + e.message, "warn");
+        speakViaAudio(text);
       }
     };
 
@@ -1742,13 +1771,17 @@
       return;
     }
     if (act === "test-voice") {
-      if (!("speechSynthesis" in window)) {
-        toast("这个浏览器不支持朗读。", "warn");
-        return;
+      if (!("speechSynthesis" in window) && !voices.length) {
+        toast("这个浏览器不支持系统朗读，试听将走在线发音", "warn");
+      } else {
+        loadVoices();
+        toast(
+          "系统语音 " + voices.length + " 个（英语 " +
+            voices.filter((v) => /^en/i.test(v.lang)).length +
+            " 个）· 没声音会自动用在线发音"
+        );
       }
-      loadVoices();
-      toast("共 " + voices.length + " 个语音 · " + (voices.filter((v) => /^en/i.test(v.lang)).length) + " 个英语语音");
-      speak("This is a test. Hello, world.");
+      speak("hello");
       return;
     }
     if (act === "pick") {
