@@ -16,6 +16,7 @@
         <text class="w">{{item.w}}</text>
         <text class="cn">{{item.pos}} {{item.cn}}</text>
       </view>
+      <text wx:if="{{item.times}}" class="times">×{{item.times}}</text>
       <text class="badge {{item.cls}}">{{item.label}}</text>
     </view>
   </view>

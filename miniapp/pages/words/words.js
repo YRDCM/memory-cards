@@ -1,4 +1,5 @@
 const store = require("../../utils/store.js");
+const srs = require("../../utils/srs.js");
 
 const PAGE = 100;
 
@@ -61,11 +62,13 @@ Page({
     for (let i = start; i < end; i++) {
       const w = list[i];
       const s = store.statusOf(w);
+      const n = srs.timesOf(store.state().prog[w.id]);
       add.push({
         id: w.id,
         w: w.w,
         pos: w.pos,
         cn: w.cn,
+        times: n > 1 ? n : 0,
         label: s === "new" ? "未学" : s === "due" ? "待复习" : s === "ok" ? "已掌握" : "学习中",
         cls: s === "new" ? "badge-new" : s === "due" ? "badge-due" : s === "ok" ? "badge-ok" : "badge-learn",
       });

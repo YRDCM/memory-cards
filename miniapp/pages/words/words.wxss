@@ -50,3 +50,13 @@
 .more {
   margin-top: 24rpx;
 }
+
+.times {
+  flex-shrink: 0;
+  font-size: 20rpx;
+  color: #6b7c7c;
+  background: #f0f2ea;
+  border-radius: 8rpx;
+  padding: 2rpx 10rpx;
+  margin-right: 12rpx;
+}

@@ -217,6 +217,13 @@
     return n;
   }
 
+  /* 这个词一共学过几次（含第一次） */
+  function timesOf(p) {
+    if (!p) return 0;
+    if (p.n) return p.n;
+    return (p.r || 0) + (p.lapses || 0) || 1;
+  }
+
   /* 记忆保持率：指数衰减，强度由当前间隔决定 */
   function retention(p) {
     if (!p) return 0;
@@ -252,7 +259,9 @@
     let p = S.prog[id];
     const isNew = !p;
     if (!p) {
-      p = S.prog[id] = { e: 2.5, i: 0, r: 0, due: now, lapses: 0, born: now, seen: now };
+      p = S.prog[id] = { e: 2.5, i: 0, r: 0, due: now, lapses: 0, born: now, seen: now, n: 1 };
+    } else {
+      p.n = (p.n || ((p.r || 0) + (p.lapses || 0))) + 1;
     }
     if (g === 1) {
       p.e = clamp(p.e - 0.2, 1.3, 3.0);
@@ -326,7 +335,12 @@
     Object.keys(S.prog).forEach((k) => {
       const a = S.prog[k];
       const b = prog[k];
-      if (!b || (a.seen || 0) >= (b.seen || 0)) prog[k] = a;
+      if (!b || (a.seen || 0) >= (b.seen || 0)) {
+        /* 次数只增不减，避免两台设备互相覆盖时倒退 */
+        prog[k] = Object.assign({}, a, { n: Math.max(timesOf(a), timesOf(b)) });
+      } else {
+        prog[k] = Object.assign({}, b, { n: Math.max(timesOf(a), timesOf(b)) });
+      }
     });
 
     const rd = remote.daily || {};
@@ -1374,7 +1388,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-word">' + esc(w.w) + "</div>" +
-        '<div class="fc-pos">' + esc(w.pos) + "</div>" +
+        '<div class="fc-pos">' + esc(w.pos) + " · " + (timesOf(p) > 1 ? "已学 " + timesOf(p) + " 次" : "第一次见") + "</div>" +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         memoBlock(w) +
@@ -1454,12 +1468,16 @@
       return '<span class="badge ' + b[0] + '">' + b[1] + "</span>";
     };
     const html = shown
-      .map(
-        (w) =>
-          '<div class="word-item"><span class="w-en">' + esc(w.w) + '</span>' +
+      .map((w) => {
+        const p = S.prog[w.id];
+        const n = timesOf(p);
+        return (
+          '<div class="word-item"><span class="w-en">' + esc(w.w) + "</span>" +
           '<span class="w-cn">' + esc(w.pos) + " " + esc(w.cn) + "</span>" +
+          (n > 0 ? '<span class="w-times" title="学过 ' + n + ' 次">×' + n + "</span>" : "") +
           badgeOf(w) + "</div>"
-      )
+        );
+      })
       .join("");
     const more =
       list.length > shown.length

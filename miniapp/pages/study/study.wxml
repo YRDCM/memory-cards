@@ -128,7 +128,7 @@
     <block wx:else>
       <view class="fc-body">
         <view class="word">{{word}}</view>
-        <view class="pos">{{pos}}</view>
+        <view class="pos">{{posLine}}</view>
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}</view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>

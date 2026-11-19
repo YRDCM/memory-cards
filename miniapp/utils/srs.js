@@ -16,6 +16,13 @@ function fmtDays(d) {
   return Math.max(1, Math.round(d / 30)) + " 个月后";
 }
 
+/** 这个词一共学过几次（含第一次） */
+function timesOf(p) {
+  if (!p) return 0;
+  if (p.n) return p.n;
+  return (p.r || 0) + (p.lapses || 0) || 1;
+}
+
 /** 打分，返回新的进度对象 */
 function apply(p, g) {
   const now = Date.now();
@@ -23,6 +30,7 @@ function apply(p, g) {
     { e: 2.5, i: 0, r: 0, due: now, lapses: 0, born: now, seen: now },
     p || {}
   );
+  out.n = (p ? timesOf(p) : 0) + 1;
   if (g === 1) {
     out.e = clamp(out.e - 0.2, 1.3, 3.0);
     out.i = 10 / 1440;
@@ -50,4 +58,4 @@ function retention(p) {
   return Math.exp(-t / strength);
 }
 
-module.exports = { DAY, nextInterval, fmtDays, apply, retention };
+module.exports = { DAY, nextInterval, fmtDays, apply, retention, timesOf };
