@@ -218,3 +218,7 @@ page {
 .sync-bad {
   color: #b4472a;
 }
+
+.sync-good {
+  color: #2e7d5b;
+}

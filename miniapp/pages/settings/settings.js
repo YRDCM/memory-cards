@@ -40,6 +40,8 @@ Page({
     syncCode: "",
     syncStatus: "",
     syncBad: false,
+    locked: false,
+    manualUnlock: false,
     learned: 0,
   },
 
@@ -58,6 +60,7 @@ Page({
     }
     const ni = Math.max(0, NEW_OPTS.indexOf(S.set.dailyNew));
     const ti = Math.max(0, TARGET_OPTS.indexOf(S.set.targetMin));
+    const synced = !!S.set.syncCode && !!S.sync.at && !S.sync.err;
     this.setData({
       deckIndex: di,
       newIndex: ni,
@@ -66,6 +69,7 @@ Page({
       syncCode: S.set.syncCode || "",
       syncStatus: sync.statusText(),
       syncBad: !!S.sync.err,
+      locked: synced && !this.data.manualUnlock,
       learned: store.learnedCount(),
     });
   },
@@ -108,8 +112,22 @@ Page({
   },
 
   onGenCode() {
-    this.setData({ syncCode: sync.newCode() });
+    this.setData({ syncCode: sync.newCode(), manualUnlock: true, locked: false });
     wx.showToast({ title: "已生成，点「启用同步」", icon: "none" });
+  },
+
+  onCopyCode() {
+    const code = store.state().set.syncCode || "";
+    if (!code) return;
+    wx.setClipboardData({
+      data: code,
+      success: () => wx.showToast({ title: "同步码已复制", icon: "none" }),
+    });
+  },
+
+  onUnlock() {
+    this.setData({ manualUnlock: true, locked: false });
+    wx.showToast({ title: "已解锁，可修改后重新启用", icon: "none" });
   },
 
   onSyncNow() {
@@ -133,6 +151,7 @@ Page({
     wx.showLoading({ title: "同步中" });
     sync.pull().then((r) => {
       wx.hideLoading();
+      this.setData({ manualUnlock: false });
       this.refresh();
       const S = store.state();
       if (S.sync.err) {

@@ -41,17 +41,27 @@
   </view>
 
   <view class="card card-pad">
-    <view class="h2">多设备同步</view>
+    <view class="row" style="justify-content: space-between">
+      <view class="h2">多设备同步</view>
+      <view wx:if="{{locked}}" class="ok-tag">✓ 已同步</view>
+    </view>
     <view class="desc" style="margin-top: 6rpx">
       手机和网页版填同一个同步码，进度自动合并。同步码相当于密码，别外传。
     </view>
-    <input class="input" style="margin-top: 20rpx" value="{{syncCode}}" bindinput="onCodeInput"
+    <input class="input {{locked ? 'input-locked' : ''}}" style="margin-top: 20rpx"
+           value="{{syncCode}}" bindinput="onCodeInput" disabled="{{locked}}"
            placeholder="点生成，或粘贴另一个设备的同步码" />
     <view class="syncbtns">
-      <view class="btn btn-sm" bindtap="onGenCode">生成</view>
-      <view class="btn btn-sm btn-primary" bindtap="onSyncNow">启用同步</view>
+      <block wx:if="{{locked}}">
+        <view class="btn btn-sm" bindtap="onCopyCode">复制同步码</view>
+        <view class="btn btn-sm" bindtap="onUnlock">更换同步码</view>
+      </block>
+      <block wx:else>
+        <view class="btn btn-sm" bindtap="onGenCode">生成</view>
+        <view class="btn btn-sm btn-primary" bindtap="onSyncNow">启用同步</view>
+      </block>
     </view>
-    <view class="sync-line {{syncBad ? 'sync-bad' : ''}}">{{syncStatus}}</view>
+    <view class="sync-line {{syncBad ? 'sync-bad' : (locked ? 'sync-good' : '')}}">{{syncStatus}}</view>
   </view>
 
   <view class="card">

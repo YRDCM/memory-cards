@@ -37,6 +37,24 @@
   flex: 1;
 }
 
+.syncbtns .btn:last-child {
+  margin-right: 0;
+}
+
+.input-locked {
+  background: #eef0ea;
+  color: #8c9b98;
+}
+
+.ok-tag {
+  font-size: 22rpx;
+  color: #2e7d5b;
+  background: #e3f0e8;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  font-family: Menlo, Consolas, monospace;
+}
+
 .foot {
   text-align: center;
   margin-top: 30rpx;
