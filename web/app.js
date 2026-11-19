@@ -1423,6 +1423,46 @@
   /* ========== 视图：词库 ========== */
   let wordFilter = "all";
   let wordQuery = "";
+  let wordSort = "default";
+  let wordOpenId = "";
+
+  function wordModalHTML() {
+    if (!wordOpenId) return "";
+    const w = MAP.get(wordOpenId);
+    if (!w) return "";
+    const p = S.prog[w.id];
+    const n = timesOf(p);
+    const st = statusOf(w);
+    const stTxt = { new: "未学", learn: "学习中", due: "待复习", ok: "已掌握" }[st] || "未学";
+    const ret = p ? Math.round(retention(p) * 100) : 0;
+    const left = p ? (p.due - Date.now()) / DAY : 0;
+    const nextTxt = p ? (left <= 0 ? "现在就该复习" : fmtDays(left) + "后") : "—";
+    const lastTxt = p && p.seen ? fmtDays((Date.now() - p.seen) / DAY) + "前" : "—";
+
+    return (
+      '<div class="wmodal" data-act="word-close">' +
+      '<div class="wmodal-card">' +
+      '<div class="wm-head">' +
+      '<div><div class="wm-word">' + esc(w.w) + "</div>" +
+      '<div class="wm-pos">' + esc(w.pos) + "</div></div>" +
+      '<div class="wm-tools">' +
+      '<button class="fc-say" data-act="speak" data-text="' + esc(w.w) + '" aria-label="听发音">' + ICON_SPEAKER + "</button>" +
+      '<button class="icon-btn" data-act="word-close-btn" aria-label="关闭">✕</button>' +
+      "</div></div>" +
+      '<div class="wm-cn">' + esc(w.cn) + "</div>" +
+      (w.ex ? '<div class="wm-ex">' + esc(w.ex) + '</div><div class="wm-excn">' + esc(w.excn) + "</div>" : "") +
+      memoBlock(w) +
+      '<div class="wm-stats">' +
+      '<div class="wm-stat"><b>' + n + "</b><span>学过次数</span></div>" +
+      '<div class="wm-stat"><b>' + (p ? ret + "%" : "—") + "</b><span>现在记得</span></div>" +
+      '<div class="wm-stat"><b>' + lastTxt + "</b><span>上次学习</span></div>" +
+      '<div class="wm-stat"><b>' + nextTxt + "</b><span>下次复习</span></div>" +
+      "</div>" +
+      '<div class="wm-foot"><span class="badge ' + st + '">' + stTxt + "</span>" +
+      '<span class="tiny">点空白处关闭</span></div>' +
+      "</div></div>"
+    );
+  }
 
   function viewWords() {
     const counts = { all: ALL.length, new: 0, learn: 0, due: 0, ok: 0 };
@@ -1446,10 +1486,38 @@
 
     return (
       '<div class="toolbar"><div class="chips">' + chips + "</div>" +
+      '<div class="tool-right">' +
+      '<select class="field word-sort" data-sort>' +
+      '<option value="default"' + (wordSort === "default" ? " selected" : "") + ">默认顺序</option>" +
+      '<option value="times-desc"' + (wordSort === "times-desc" ? " selected" : "") + ">学习次数 多→少</option>" +
+      '<option value="times-asc"' + (wordSort === "times-asc" ? " selected" : "") + ">学习次数 少→多</option>" +
+      '<option value="recent"' + (wordSort === "recent" ? " selected" : "") + ">最近学过的在前</option>" +
+      '<option value="weak"' + (wordSort === "weak" ? " selected" : "") + ">最该复习的在前</option>" +
+      "</select>" +
       '<input class="search" id="word-search" type="search" placeholder="搜索单词或释义" value="' +
-      esc(wordQuery) + '"></div>' +
-      '<div id="word-list">' + wordListHTML() + "</div>"
+      esc(wordQuery) + '"></div></div>' +
+      '<div id="word-list">' + wordListHTML() + "</div>" +
+      wordModalHTML()
     );
+  }
+
+  function sortWordList(list) {
+    if (wordSort === "default") return list;
+    const arr = list.slice();
+    const times = (w) => timesOf(S.prog[w.id]);
+    const seen = (w) => (S.prog[w.id] || {}).seen || 0;
+    const weakKey = (w) => {
+      const p = S.prog[w.id];
+      return p ? retention(p) : 2;
+    };
+    if (wordSort === "times-desc") arr.sort((a, b) => times(b) - times(a));
+    else if (wordSort === "times-asc") {
+      /* 没学过的排最后，否则第一屏全是 0 次的新词，等于没排序 */
+      const k = (w) => times(w) || 9999;
+      arr.sort((a, b) => k(a) - k(b));
+    } else if (wordSort === "recent") arr.sort((a, b) => seen(b) - seen(a));
+    else if (wordSort === "weak") arr.sort((a, b) => weakKey(a) - weakKey(b));
+    return arr;
   }
 
   function wordListHTML() {
@@ -1459,6 +1527,7 @@
       if (!q) return true;
       return w.w.toLowerCase().indexOf(q) >= 0 || w.cn.indexOf(q) >= 0;
     });
+    list = sortWordList(list);
     if (!list.length) return '<div class="panel empty">没有符合条件的词。</div>';
     const shown = list.slice(0, 300);
     const badgeOf = (w) => {
@@ -1472,7 +1541,8 @@
         const p = S.prog[w.id];
         const n = timesOf(p);
         return (
-          '<div class="word-item"><span class="w-en">' + esc(w.w) + "</span>" +
+          '<div class="word-item" data-act="word-open" data-id="' + esc(w.id) + '">' +
+          '<span class="w-en">' + esc(w.w) + "</span>" +
           '<span class="w-cn">' + esc(w.pos) + " " + esc(w.cn) + "</span>" +
           (n > 0 ? '<span class="w-times" title="学过 ' + n + ' 次">×' + n + "</span>" : "") +
           badgeOf(w) + "</div>"
@@ -1715,6 +1785,14 @@
     render();
   }
 
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && wordOpenId) {
+      e.preventDefault();
+      wordOpenId = "";
+      render();
+    }
+  });
+
   /* ========== 事件 ========== */
   document.addEventListener("click", function (e) {
     const el = e.target.closest("[data-act]");
@@ -1825,6 +1903,17 @@
       render();
       return;
     }
+    if (act === "word-open") {
+      wordOpenId = el.dataset.id || "";
+      render();
+      return;
+    }
+    if (act === "word-close" || act === "word-close-btn") {
+      if (act === "word-close" && e.target.closest(".wmodal-card")) return;
+      wordOpenId = "";
+      render();
+      return;
+    }
     if (act === "filter") {
       wordFilter = el.dataset.f;
       render();
@@ -1902,6 +1991,13 @@
       }
       return;
     }
+  });
+
+  document.addEventListener("change", function (e) {
+    const sel = e.target.closest("[data-sort]");
+    if (!sel) return;
+    wordSort = sel.value;
+    render();
   });
 
   document.addEventListener("change", function (e) {

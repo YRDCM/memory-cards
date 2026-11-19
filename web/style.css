@@ -721,7 +721,6 @@ textarea {
 }
 
 .search {
-  margin-left: auto;
   border: 1px solid var(--line);
   background: var(--surface);
   border-radius: 9px;
@@ -733,6 +732,26 @@ textarea {
   border-color: var(--accent);
   outline: none;
   box-shadow: 0 0 0 3px var(--soft);
+}
+
+.tool-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.word-sort {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.word-sort:focus {
+  border-color: var(--accent);
+  outline: none;
 }
 
 .word-list {
@@ -749,18 +768,27 @@ textarea {
   border: 1px solid var(--line-2);
   border-radius: 10px;
   background: var(--surface);
+  cursor: pointer;
   transition: border-color 0.15s ease, transform 0.12s ease;
+  min-width: 0;
 }
 .word-item:hover {
   border-color: var(--line);
   transform: translateY(-1px);
 }
 .w-en {
+  flex: 0 0 auto;
+  max-width: 52%;
   font-family: var(--font-display);
   font-size: 16.5px;
   letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .w-cn {
+  flex: 1 1 0;
+  min-width: 0;
   font-size: 12.5px;
   color: var(--muted);
   overflow: hidden;
@@ -1155,6 +1183,132 @@ textarea {
 .memo-dot {
   color: var(--faint, #9ca3af);
   margin: 0 6px;
+}
+
+/* ---------- 单词详情弹窗 ---------- */
+
+.wmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(22, 38, 43, 0.4);
+  animation: mapIn 0.16s ease;
+}
+
+.wmodal-card {
+  width: min(560px, 100%);
+  max-height: 86vh;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 26px 28px 22px;
+  box-shadow: 0 40px 90px -46px rgba(22, 38, 43, 0.9);
+}
+
+.wm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.wm-word {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+.wm-pos {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.wm-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.wm-cn {
+  margin-top: 16px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.wm-ex {
+  margin-top: 14px;
+  padding-left: 12px;
+  border-left: 3px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+.wm-excn {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.wm-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+.wm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wm-stat b {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wm-stat span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.wm-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+@media (max-width: 720px) {
+  .wmodal {
+    padding: 14px;
+    align-items: flex-end;
+  }
+  .wmodal-card {
+    padding: 20px 18px 18px;
+    border-radius: 16px;
+  }
+  .wm-word {
+    font-size: 32px;
+  }
+  .wm-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tool-right {
+    width: 100%;
+  }
+  .word-sort {
+    flex: 1;
+  }
+  .search {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 /* ---------- 统计 ---------- */
