@@ -109,6 +109,7 @@ const variants = {
   "quiz-choice": `document.querySelector('[data-act=start]').click();`,
   "quiz-cloze": `document.querySelector('[data-act=start]').click();`,
   "today-over": ``,
+  "today-154": ``,
   spell: `document.querySelector('[data-act=start]').click();`,
   flow: `
     var out = [];
@@ -158,6 +159,15 @@ if (overState.daily[todayK]) {
   overState.daily[todayK].sec = 1620;
 }
 
+/* 三分位数字，用来检验数值列对齐 */
+const bigState = JSON.parse(JSON.stringify(state));
+if (bigState.daily[todayK]) {
+  bigState.daily[todayK].newW = 154;
+  bigState.daily[todayK].cards = 170;
+  bigState.daily[todayK].sec = 1800;
+}
+bigState.set.dailyNew = 25;
+
 const seeds = {
   first: "<script>try{localStorage.clear()}catch(e){}</script>",
   spell: seedSpell,
@@ -167,6 +177,10 @@ const seeds = {
   "today-over":
     "<script>try{localStorage.setItem('eyc_v1'," +
     JSON.stringify(JSON.stringify(overState)) +
+    ")}catch(e){}</script>",
+  "today-154":
+    "<script>try{localStorage.setItem('eyc_v1'," +
+    JSON.stringify(JSON.stringify(bigState)) +
     ")}catch(e){}</script>",
 };
 
