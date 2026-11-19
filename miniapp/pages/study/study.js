@@ -1,6 +1,7 @@
 const store = require("../../utils/store.js");
 const srs = require("../../utils/srs.js");
 const sync = require("../../utils/sync.js");
+const tts = require("../../utils/tts.js");
 
 /* ---------- 题型工具 ---------- */
 
@@ -212,6 +213,7 @@ Page({
     hintCn: "",
     memoParts: [],
     memoFam: [],
+    ttsOk: false,
     keys: ["A", "B", "C", "D"],
   },
 
@@ -219,11 +221,23 @@ Page({
 
   onLoad(options) {
     OPT_POOL = null;
+    this.setData({ ttsOk: tts.available() });
     this.startSession(Number(options.extra || 0));
   },
 
   onUnload() {
+    tts.stop();
     if (this.session && this.session.done > 0) sync.push();
+  },
+
+  onSpeak() {
+    const w = this.data.word;
+    if (!w) return;
+    tts.speak(w, {
+      onFail: function (m) {
+        wx.showToast({ title: "发音不可用：" + m, icon: "none" });
+      },
+    });
   },
 
   startSession(extraNew) {

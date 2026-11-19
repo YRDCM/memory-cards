@@ -51,6 +51,27 @@
   margin-top: 32rpx;
 }
 
+.foot-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.foot-row .speak {
+  flex-shrink: 0;
+  height: 88rpx;
+  padding: 0 28rpx;
+  border-radius: 16rpx;
+  font-size: 26rpx;
+  color: #3d4f52;
+  background: #f3f5ee;
+}
+
+.foot-row .grow-btn {
+  flex: 1;
+  height: 88rpx;
+}
+
 .tab {
   position: absolute;
   top: 24rpx;

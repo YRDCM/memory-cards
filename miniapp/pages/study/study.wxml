@@ -116,7 +116,10 @@
         <view class="hint">先在心里回想它的意思，再翻开</view>
       </view>
       <view class="fc-foot">
-        <view class="btn btn-primary btn-block" bindtap="onFlip">显示释义</view>
+        <view class="foot-row">
+          <view wx:if="{{ttsOk}}" class="btn btn-sm speak" bindtap="onSpeak">🔊 发音</view>
+          <view class="btn btn-primary grow-btn" bindtap="onFlip">显示释义</view>
+        </view>
       </view>
     </block>
 
