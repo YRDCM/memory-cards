@@ -1447,7 +1447,6 @@
       '<div class="wm-pos">' + esc(w.pos) + "</div></div>" +
       '<div class="wm-tools">' +
       '<button class="fc-say" data-act="speak" data-text="' + esc(w.w) + '" aria-label="听发音">' + ICON_SPEAKER + "</button>" +
-      '<button class="icon-btn" data-act="word-close-btn" aria-label="关闭">✕</button>' +
       "</div></div>" +
       '<div class="wm-cn">' + esc(w.cn) + "</div>" +
       (w.ex ? '<div class="wm-ex">' + esc(w.ex) + '</div><div class="wm-excn">' + esc(w.excn) + "</div>" : "") +
@@ -1459,7 +1458,7 @@
       '<div class="wm-stat"><b>' + nextTxt + "</b><span>下次复习</span></div>" +
       "</div>" +
       '<div class="wm-foot"><span class="badge ' + st + '">' + stTxt + "</span>" +
-      '<span class="tiny">点空白处关闭</span></div>' +
+      '<span class="tiny">点空白处或按 Esc 关闭</span></div>' +
       "</div></div>"
     );
   }
@@ -1908,8 +1907,8 @@
       render();
       return;
     }
-    if (act === "word-close" || act === "word-close-btn") {
-      if (act === "word-close" && e.target.closest(".wmodal-card")) return;
+    if (act === "word-close") {
+      if (e.target.closest(".wmodal-card")) return;
       wordOpenId = "";
       render();
       return;
