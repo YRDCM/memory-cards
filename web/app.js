@@ -1837,10 +1837,7 @@
       mapFullHTML() +
       '<div class="toast-wrap" id="toasts"></div>';
 
-    document.title =
-      v === "study"
-        ? "学习中 · 记忆卡片盒"
-        : "(" + doneToday + "/" + S.set.dailyNew + ") 记忆卡片盒";
+    document.title = "记忆卡片盒";
 
     const sp = $("#spell") || $("#cloze");
     if (sp) sp.focus();
