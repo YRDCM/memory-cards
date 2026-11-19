@@ -1683,7 +1683,10 @@
         history.replaceState(null, "", location.pathname + location.search + h);
       }
     } catch (e) {}
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    /* 手机端内容区是独立滚动容器，桌面端滚动的是窗口，两边都归零 */
+    const sc = document.querySelector(".shell");
+    if (sc) sc.scrollTop = 0;
+    window.scrollTo({ top: 0 });
     render();
   }
 

@@ -1428,6 +1428,32 @@ button,
 }
 
 @media (max-width: 720px) {
+  /* 手机端：整个应用是定高 flex 容器，内容区自己滚，
+     tabBar 变成布局里的一项 —— 不再用 position:fixed。
+     这样长页面滚动、地址栏伸缩时都不会被顶掉。 */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .topbar {
+    position: static;
+    flex: 0 0 auto;
+  }
+  .shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 14px 20px;
+  }
+
   .topbar-inner {
     padding: 8px 14px;
     gap: 8px;
@@ -1469,22 +1495,14 @@ button,
     font-size: 10px;
   }
 
-  .shell {
-    padding: 14px 14px calc(94px + env(safe-area-inset-bottom));
-  }
-
   .tabbar {
     display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 60;
+    position: static;
+    flex: 0 0 auto;
     justify-content: space-around;
     gap: 4px;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-    background: rgba(250, 251, 246, 0.97);
-    backdrop-filter: blur(12px);
+    background: #fafbf6;
     border-top: 1px solid var(--line);
   }
   .tabbar .tab {
