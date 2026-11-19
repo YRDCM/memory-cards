@@ -518,10 +518,12 @@ textarea {
 .ring {
   position: relative;
   width: 92px;
-  height: 106px;
+  height: 92px;
   flex: 0 0 auto;
 }
 .ring svg {
+  width: 100%;
+  height: 100%;
   transform: rotate(-90deg);
   display: block;
 }
@@ -547,11 +549,12 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 .ring-num small {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
   display: block;
   margin-top: 3px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .task-list {
