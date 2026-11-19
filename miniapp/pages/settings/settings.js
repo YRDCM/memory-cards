@@ -34,6 +34,12 @@ const QUIZ_OPTS = [
   { key: "mixed", label: "混合" },
 ];
 
+/* 改设置：打时间戳 + 排队推送到服务器 */
+function setAndSync(k, v) {
+  store.setSetting(k, v);
+  if (sync.enabled()) sync.schedule();
+}
+
 Page({
   data: {
     deckLabels: DECKS.map((d) => d.label),
@@ -89,9 +95,7 @@ Page({
 
   onDeck(e) {
     const i = Number(e.detail.value);
-    const S = store.state();
-    S.set.deck = DECKS[i].key;
-    store.save();
+    setAndSync("deck", DECKS[i].key);
     store.rebuild();
     this.setData({ deckIndex: i });
     wx.showToast({ title: "已切换到 " + DECKS[i].label, icon: "none" });
@@ -99,32 +103,24 @@ Page({
 
   onNew(e) {
     const i = Number(e.detail.value);
-    const S = store.state();
-    S.set.dailyNew = NEW_OPTS[i];
-    store.save();
+    setAndSync("dailyNew", NEW_OPTS[i]);
     this.setData({ newIndex: i });
   },
 
   onTarget(e) {
     const i = Number(e.detail.value);
-    const S = store.state();
-    S.set.targetMin = TARGET_OPTS[i];
-    store.save();
+    setAndSync("targetMin", TARGET_OPTS[i]);
     this.setData({ targetIndex: i });
   },
 
   onSpell(e) {
-    const S = store.state();
-    S.set.spelling = e.detail.value;
-    store.save();
+    setAndSync("spelling", e.detail.value);
     this.setData({ spelling: e.detail.value });
   },
 
   onQuiz(e) {
     const i = Number(e.detail.value);
-    const S = store.state();
-    S.set.quiz = QUIZ_OPTS[i].key;
-    store.save();
+    setAndSync("quiz", QUIZ_OPTS[i].key);
     this.setData({ quizIndex: i });
   },
 

@@ -58,6 +58,7 @@
     quiz: "card",
     syncCode: "",
     syncOn: true,
+    at: 0,
   };
 
   function freshState() {
@@ -350,7 +351,22 @@
       daily,
       custom,
       bestStreak: Math.max(S.meta.bestStreak || 0, (remote.meta && remote.meta.bestStreak) || 0),
+      set: mergeSet(remote.set),
     };
+  }
+
+  /* 设置同步：谁改得晚听谁的；同步码是设备本地信息，不跟着合并 */
+  function mergeSet(remoteSet) {
+    const local = S.set || {};
+    const remote = remoteSet || {};
+    const localAt = Number(local.at) || 0;
+    const remoteAt = Number(remote.at) || 0;
+    const win = remoteAt > localAt ? remote : local;
+    const out = Object.assign({}, win);
+    out.syncCode = local.syncCode || "";
+    out.syncOn = local.syncOn !== false;
+    out.at = Math.max(localAt, remoteAt);
+    return out;
   }
 
   function applyRemote(m) {
@@ -359,6 +375,7 @@
     S.prog = m.prog;
     S.daily = m.daily;
     S.custom = m.custom;
+    if (m.set) S.set = m.set;
     S.meta.bestStreak = m.bestStreak;
     rebuildWords();
     applyingRemote = false;
@@ -1584,7 +1601,7 @@
       '<div class="sync-head"><span class="set-label">多设备同步</span>' +
       (syncLocked() ? '<span class="pill-ok">✓ 已同步</span>' : "") +
       "</div>" +
-      '<div class="set-desc">手机和电脑填同一个同步码，进度就会自动合并。同步码相当于密码，别发到公开的地方。</div>' +
+      '<div class="set-desc">手机和电脑填同一个同步码，学习进度和这里的设置都会自动合并（谁改得晚听谁的）。同步码相当于密码，别发到公开的地方。</div>' +
       '<div class="sync-line">' +
       '<input class="field sync-input' + (syncLocked() ? " is-locked" : "") + '" id="sync-code" value="' + esc(S.set.syncCode || "") +
       '" placeholder="点「生成」，或粘贴另一台设备的同步码" spellcheck="false" autocomplete="off"' +
@@ -1796,12 +1813,14 @@
     }
     if (act === "toggle-spell") {
       S.set.spelling = !S.set.spelling;
+      S.set.at = Date.now();
       save();
       render();
       return;
     }
     if (act === "spell-toggle") {
       S.set.spelling = !S.set.spelling;
+      S.set.at = Date.now();
       save();
       render();
       return;
@@ -1892,6 +1911,7 @@
     let v = el.value;
     if (el.dataset.num === "1") v = Number(v);
     S.set[k] = v;
+    if (k !== "syncCode" && k !== "syncOn") S.set.at = Date.now();
     save();
     if (k === "deck") {
       rebuildWords();

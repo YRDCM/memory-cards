@@ -87,7 +87,22 @@ function merge(local, remote) {
       local.meta.bestStreak || 0,
       (remote.meta && remote.meta.bestStreak) || 0
     ),
+    set: mergeSet(local, remote),
   };
+}
+
+/* 设置同步：谁改得晚听谁的；同步码是设备本地信息，不跟着合并 */
+function mergeSet(local, remote) {
+  const l = local.set || {};
+  const r = (remote && remote.set) || {};
+  const localAt = Number(l.at) || 0;
+  const remoteAt = Number(r.at) || 0;
+  const win = remoteAt > localAt ? r : l;
+  const out = Object.assign({}, win);
+  out.syncCode = l.syncCode || "";
+  out.syncOn = l.syncOn !== false;
+  out.at = Math.max(localAt, remoteAt);
+  return out;
 }
 
 function apply(merged) {
@@ -95,6 +110,7 @@ function apply(merged) {
   S.prog = merged.prog;
   S.daily = merged.daily;
   S.custom = merged.custom;
+  if (merged.set) S.set = merged.set;
   S.meta.bestStreak = merged.bestStreak;
   store.rebuild();
   store.save();

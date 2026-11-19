@@ -56,7 +56,7 @@
       <view wx:if="{{locked}}" class="ok-tag">✓ 已同步</view>
     </view>
     <view class="desc" style="margin-top: 6rpx">
-      手机和网页版填同一个同步码，进度自动合并。同步码相当于密码，别外传。
+      手机和网页版填同一个同步码，进度和设置都会自动合并。同步码相当于密码，别外传。
     </view>
     <input class="input {{locked ? 'input-locked' : ''}}" style="margin-top: 20rpx"
            value="{{syncCode}}" bindinput="onCodeInput" disabled="{{locked}}"

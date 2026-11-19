@@ -12,6 +12,7 @@ const DEFAULT_SET = {
   quiz: "card",
   syncCode: "",
   syncOn: true,
+  at: 0,
 };
 
 /* ---------- 日期 ---------- */
@@ -128,6 +129,13 @@ function save() {
   try {
     wx.setStorageSync(KEY, S);
   } catch (e) {}
+}
+
+/** 改设置：打时间戳，让同步知道该听谁的 */
+function setSetting(k, v) {
+  S.set[k] = v;
+  if (k !== "syncCode" && k !== "syncOn") S.set.at = Date.now();
+  save();
 }
 
 function state() {
@@ -266,6 +274,7 @@ module.exports = {
   init: init,
   state: state,
   save: save,
+  setSetting: setSetting,
   rebuild: rebuild,
   all: () => ALL,
   map: () => MAP,
