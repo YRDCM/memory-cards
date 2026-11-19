@@ -1,0 +1,55 @@
+<view class="page">
+
+  <!-- 小雅 -->
+  <view class="card card-pad">
+    <view class="row">
+      <view class="avatar">雅</view>
+      <view class="grow coach-body">
+        <view class="tiny">小雅 · 学习监督</view>
+        <view class="coach-msg">{{coachText}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日任务 -->
+  <view class="card card-pad">
+    <view class="row" style="justify-content: space-between; margin-bottom: 8rpx;">
+      <text class="h2">今日任务</text>
+      <text class="tiny mono">{{today}}</text>
+    </view>
+
+    <view class="pct">{{pct}}<text class="pct-unit">%</text></view>
+    <view class="tiny" style="margin-bottom: 18rpx;">今日完成度</view>
+
+    <view class="bar">
+      <view class="bar-fill" style="width: {{pct}}%"></view>
+    </view>
+
+    <view class="rows">
+      <view class="trow">
+        <text class="dot {{newDone >= newGoal ? 'dot-on' : ''}}"></text>
+        <text class="tlabel">新词</text>
+        <text class="tval mono">{{newDone}} / {{newGoal}}</text>
+      </view>
+      <view class="trow">
+        <text class="dot {{dueLeft === 0 ? 'dot-on' : ''}}"></text>
+        <text class="tlabel">到期复习</text>
+        <text class="tval mono {{dueLeft ? 'warn' : ''}}">{{dueLeft === 0 ? '已清空' : '剩 ' + dueLeft + ' 个'}}</text>
+      </view>
+      <view class="trow">
+        <text class="dot {{minDone >= minGoal ? 'dot-on' : ''}}"></text>
+        <text class="tlabel">专注</text>
+        <text class="tval mono">{{minDone}} / {{minGoal}} 分</text>
+      </view>
+      <view class="trow">
+        <text class="dot {{streak > 0 ? 'dot-on' : ''}}"></text>
+        <text class="tlabel">连续打卡</text>
+        <text class="tval mono">{{streak}} 天</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="btn btn-primary btn-block" bindtap="onStart">{{ctaText}}</view>
+
+  <view class="foot tiny">已学 {{learned}} 词 · 数据只存在这台手机</view>
+</view>

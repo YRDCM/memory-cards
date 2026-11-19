@@ -1,0 +1,54 @@
+<view class="page">
+
+  <view class="grid">
+    <view class="stat">
+      <view class="num mono">{{minutes}}<text class="unit">分</text></view>
+      <view class="lab">累计专注</view>
+    </view>
+    <view class="stat">
+      <view class="num mono">{{cards}}<text class="unit">张</text></view>
+      <view class="lab">累计卡片</view>
+    </view>
+    <view class="stat">
+      <view class="num mono">{{newWords}}<text class="unit">个</text></view>
+      <view class="lab">累计新词</view>
+    </view>
+    <view class="stat">
+      <view class="num mono">{{accuracy}}<text class="unit">%</text></view>
+      <view class="lab">一次答对率</view>
+    </view>
+  </view>
+
+  <view class="card card-pad">
+    <view class="row" style="justify-content: space-between">
+      <text class="h2">当前状态</text>
+      <text class="tiny">{{days}} 天有记录</text>
+    </view>
+    <view class="kvs">
+      <view class="kv"><text>连续打卡</text><text class="mono v">{{streak}} 天</text></view>
+      <view class="kv"><text>最长连续</text><text class="mono v">{{best}} 天</text></view>
+      <view class="kv"><text>已学词数</text><text class="mono v">{{learned}}</text></view>
+      <view class="kv"><text>待复习</text><text class="mono v {{due ? 'warn' : ''}}">{{due}}</text></view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-pad" style="padding-bottom: 8rpx">
+      <text class="h2">最近 14 天</text>
+    </view>
+    <view class="thead tiny">
+      <text class="c1">日期</text>
+      <text class="c2">卡片</text>
+      <text class="c3">新词</text>
+      <text class="c4">分钟</text>
+      <text class="c5">正确率</text>
+    </view>
+    <view class="tr" wx:for="{{rows}}" wx:key="day">
+      <text class="c1 mono">{{item.day}}</text>
+      <text class="c2 mono">{{item.cards}}</text>
+      <text class="c3 mono">{{item.newW}}</text>
+      <text class="c4 mono">{{item.min}}</text>
+      <text class="c5 mono">{{item.acc}}</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,166 @@
+.wrap {
+  padding: 20rpx 24rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.counter {
+  font-size: 24rpx;
+  color: #6b7c7c;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.bar-wrap {
+  margin-right: 20rpx;
+}
+
+.end {
+  flex-shrink: 0;
+}
+
+/* ---------- 卡片 ---------- */
+
+.flashcard {
+  position: relative;
+  background: #fafbf6;
+  border: 1rpx solid #d6dbd0;
+  border-radius: 24rpx;
+  padding: 56rpx 44rpx 40rpx 64rpx;
+  min-height: 620rpx;
+  box-sizing: border-box;
+  box-shadow: 0 12rpx 30rpx -18rpx rgba(22, 38, 43, 0.5);
+}
+
+.flashcard::before {
+  content: "";
+  position: absolute;
+  left: 34rpx;
+  top: 0;
+  bottom: 0;
+  width: 1rpx;
+  background: rgba(180, 71, 42, 0.28);
+}
+
+.tab {
+  position: absolute;
+  top: 24rpx;
+  right: 30rpx;
+  letter-spacing: 2rpx;
+}
+
+.word {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 84rpx;
+  line-height: 1.1;
+  letter-spacing: -1rpx;
+  word-break: break-all;
+}
+
+.word.ok {
+  color: #2e7d5b;
+}
+
+.word.bad {
+  color: #b4472a;
+}
+
+.pos {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 24rpx;
+  color: #6b7c7c;
+  letter-spacing: 1rpx;
+  margin-top: 10rpx;
+}
+
+.meaning {
+  font-size: 42rpx;
+  line-height: 1.5;
+  margin-top: 24rpx;
+}
+
+.hint {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 24rpx;
+  color: #8c9b98;
+  margin-top: 24rpx;
+}
+
+.ex {
+  margin-top: 32rpx;
+  padding-left: 20rpx;
+  border-left: 4rpx solid #d6dbd0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 32rpx;
+  line-height: 1.55;
+  color: #3d4f52;
+}
+
+.excn {
+  margin-top: 8rpx;
+  padding-left: 20rpx;
+  font-size: 26rpx;
+  color: #6b7c7c;
+  line-height: 1.55;
+}
+
+/* ---------- 评分 ---------- */
+
+.grades {
+  display: flex;
+  margin-top: 44rpx;
+}
+
+.grade {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 140rpx;
+  border: 1rpx solid #d6dbd0;
+  border-radius: 18rpx;
+  margin-right: 16rpx;
+  background: #fafbf6;
+}
+
+.grade:last-child {
+  margin-right: 0;
+}
+
+.grade:active {
+  background: #f3f5ee;
+}
+
+.g-name {
+  font-size: 30rpx;
+  letter-spacing: 1rpx;
+}
+
+.g-when {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 20rpx;
+  color: #6b7c7c;
+  margin-top: 6rpx;
+}
+
+/* ---------- 拼写 ---------- */
+
+.spell-input {
+  height: 120rpx;
+  border-bottom: 3rpx solid #d6dbd0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 56rpx;
+  margin: 40rpx 0 48rpx;
+  padding: 0 4rpx;
+}
+
+.ph {
+  color: #b9c2b6;
+  font-size: 40rpx;
+}

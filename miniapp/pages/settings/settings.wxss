@@ -1,0 +1,43 @@
+.setrow {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 30rpx;
+  border-bottom: 1rpx solid #eef0e8;
+}
+
+.setrow.last {
+  border-bottom: 0;
+}
+
+.label {
+  font-size: 28rpx;
+}
+
+.desc {
+  font-size: 22rpx;
+  color: #6b7c7c;
+  line-height: 1.6;
+  margin-top: 4rpx;
+}
+
+.val {
+  font-size: 26rpx;
+  color: #0f6b5c;
+  margin-left: 20rpx;
+  flex-shrink: 0;
+}
+
+.syncbtns {
+  display: flex;
+  margin-top: 18rpx;
+}
+
+.syncbtns .btn {
+  margin-right: 16rpx;
+  flex: 1;
+}
+
+.foot {
+  text-align: center;
+  margin-top: 30rpx;
+}

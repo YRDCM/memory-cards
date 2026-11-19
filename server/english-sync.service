@@ -1,0 +1,20 @@
+[Unit]
+Description=English Coach Sync API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dsh
+Group=dsh
+Environment=EYC_DATA=/opt/english-coach/data
+Environment=EYC_PORT=8093
+WorkingDirectory=/opt/english-coach
+ExecStart=/usr/bin/python3 /opt/english-coach/sync_server.py
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

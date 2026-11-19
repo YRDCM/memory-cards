@@ -1,0 +1,69 @@
+<view class="wrap">
+
+  <!-- 顶部进度 -->
+  <view class="top">
+    <text class="mono counter">{{idx}} / {{total}}</text>
+    <view class="grow bar-wrap">
+      <view class="bar">
+        <view class="bar-fill" style="width: {{pct}}%"></view>
+      </view>
+    </view>
+    <text class="tiny end" bindtap="onEnd">结束</text>
+  </view>
+
+  <!-- 卡片 -->
+  <view class="flashcard">
+    <view class="tab tiny">{{isNew ? 'NEW' : 'REVIEW'}}</view>
+
+    <!-- 拼写模式 -->
+    <block wx:if="{{stage === 'spell'}}">
+      <view class="meaning">{{cn}}</view>
+      <view class="pos">{{pos}} · 根据释义拼出这个单词</view>
+      <input class="spell-input" value="{{input}}" bindinput="onInput" focus="{{true}}"
+             placeholder="在这里拼写" placeholder-class="ph" confirm-type="done" bindconfirm="onCheck" />
+      <view class="btn btn-primary btn-block" bindtap="onCheck">检查</view>
+    </block>
+
+    <!-- 拼写结果 -->
+    <block wx:elif="{{stage === 'spellResult'}}">
+      <view class="word {{spellOk ? 'ok' : 'bad'}}">{{word}}</view>
+      <view class="pos">{{pos}} · {{spellOk ? '✓ 拼对了' : '✗ 正确写法是这样'}}</view>
+      <view class="meaning">{{cn}}</view>
+      <view wx:if="{{ex}}" class="ex">{{ex}}</view>
+      <view wx:if="{{excn}}" class="excn">{{excn}}</view>
+      <view class="btn btn-primary btn-block" bindtap="onSpellNext">继续</view>
+    </block>
+
+    <!-- 正面 -->
+    <block wx:elif="{{!revealed}}">
+      <view class="word">{{word}}</view>
+      <view class="pos">{{pos}}</view>
+      <view class="hint">先在心里回想它的意思，再翻开</view>
+      <view class="btn btn-primary btn-block" bindtap="onFlip">显示释义</view>
+    </block>
+
+    <!-- 背面 -->
+    <block wx:else>
+      <view class="word">{{word}}</view>
+      <view class="pos">{{pos}}</view>
+      <view class="meaning">{{cn}}</view>
+      <view wx:if="{{ex}}" class="ex">{{ex}}</view>
+      <view wx:if="{{excn}}" class="excn">{{excn}}</view>
+
+      <view class="grades">
+        <view class="grade" data-g="1" bindtap="onGrade">
+          <text class="g-name">忘了</text>
+          <text class="g-when">{{pre1}}</text>
+        </view>
+        <view class="grade" data-g="2" bindtap="onGrade">
+          <text class="g-name">模糊</text>
+          <text class="g-when">{{pre2}}</text>
+        </view>
+        <view class="grade" data-g="3" bindtap="onGrade">
+          <text class="g-name">会了</text>
+          <text class="g-when">{{pre3}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

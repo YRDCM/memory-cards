@@ -1,0 +1,52 @@
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 12rpx;
+}
+
+.search {
+  margin-bottom: 20rpx;
+}
+
+.list {
+  background: #fafbf6;
+  border: 1rpx solid #d6dbd0;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 26rpx;
+  border-bottom: 1rpx solid #eef0e8;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.w {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34rpx;
+  margin-right: 14rpx;
+}
+
+.cn {
+  font-size: 24rpx;
+  color: #6b7c7c;
+  display: block;
+  margin-top: 2rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  margin-top: 24rpx;
+}

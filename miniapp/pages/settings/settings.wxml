@@ -1,0 +1,79 @@
+<view class="page">
+
+  <view class="card">
+    <picker mode="selector" range="{{newLabels}}" value="{{newIndex}}" bindchange="onNew">
+      <view class="setrow">
+        <view class="grow">
+          <view class="label">每日新词</view>
+          <view class="desc">20 个左右最适合每天一小时。</view>
+        </view>
+        <view class="val mono">{{newLabels[newIndex]}}</view>
+      </view>
+    </picker>
+
+    <picker mode="selector" range="{{targetLabels}}" value="{{targetIndex}}" bindchange="onTarget">
+      <view class="setrow">
+        <view class="grow">
+          <view class="label">每日专注目标</view>
+          <view class="desc">低于这个时间，当天不算完整打卡。</view>
+        </view>
+        <view class="val mono">{{targetLabels[targetIndex]}}</view>
+      </view>
+    </picker>
+
+    <view class="setrow">
+      <view class="grow">
+        <view class="label">拼写测试</view>
+        <view class="desc">复习旧词时，看中文拼英文。更累，但记得牢。</view>
+      </view>
+      <switch checked="{{spelling}}" bindchange="onSpell" color="#0f6b5c" />
+    </view>
+
+    <picker mode="selector" range="{{deckLabels}}" value="{{deckIndex}}" bindchange="onDeck">
+      <view class="setrow last">
+        <view class="grow">
+          <view class="label">词汇范围</view>
+          <view class="desc">「全部」按 初中 → 高中 → 四级 排，先学完初中再进高中。</view>
+        </view>
+        <view class="val mono">{{deckLabels[deckIndex]}}</view>
+      </view>
+    </picker>
+  </view>
+
+  <view class="card card-pad">
+    <view class="h2">多设备同步</view>
+    <view class="desc" style="margin-top: 6rpx">
+      手机和网页版填同一个同步码，进度自动合并。同步码相当于密码，别外传。
+    </view>
+    <input class="input" style="margin-top: 20rpx" value="{{syncCode}}" bindinput="onCodeInput"
+           placeholder="点生成，或粘贴另一个设备的同步码" />
+    <view class="syncbtns">
+      <view class="btn btn-sm" bindtap="onGenCode">生成</view>
+      <view class="btn btn-sm btn-primary" bindtap="onSyncNow">启用同步</view>
+    </view>
+    <view class="sync-line {{syncBad ? 'sync-bad' : ''}}">{{syncStatus}}</view>
+  </view>
+
+  <view class="card">
+    <view class="setrow" bindtap="onCopyBackup">
+      <view class="grow">
+        <view class="label">复制备份</view>
+        <view class="desc">把当前进度复制到剪贴板，存到别的地方。</view>
+      </view>
+    </view>
+    <view class="setrow" bindtap="onRestoreBackup">
+      <view class="grow">
+        <view class="label">从剪贴板恢复</view>
+        <view class="desc">粘贴之前复制的备份内容。</view>
+      </view>
+    </view>
+    <view class="setrow last" bindtap="onReset">
+      <view class="grow">
+        <view class="label warn">清空所有数据</view>
+        <view class="desc">进度、打卡、词表全部删除，无法恢复。</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="foot tiny">已学 {{learned}} 词 · 记忆卡片盒 v1.0</view>
+</view>

@@ -1,0 +1,31 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/words/words",
+    "pages/stats/stats",
+    "pages/settings/settings",
+    "pages/study/study"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#fafbf6",
+    "navigationBarTitleText": "记忆卡片盒",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#edefe8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#6b7c7c",
+    "selectedColor": "#0f6b5c",
+    "backgroundColor": "#fafbf6",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "今日" },
+      { "pagePath": "pages/words/words", "text": "词库" },
+      { "pagePath": "pages/stats/stats", "text": "统计" },
+      { "pagePath": "pages/settings/settings", "text": "设置" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

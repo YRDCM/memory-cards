@@ -1,0 +1,17 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+
+# 词库原始数据（体积大，用 web/_build-deck.mjs 可重新下载生成）
+web/raw/
+
+# 开发者工具本地配置
+project.private.config.json
+miniapp/project.private.config.json
+
+# 系统
+.DS_Store
+Thumbs.db
+*.log
