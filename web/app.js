@@ -492,29 +492,66 @@
 
   /* ========== 发音 ========== */
   let voices = [];
+  let voicesLoaded = false;
   function loadVoices() {
     if (!("speechSynthesis" in window)) return;
-    voices = window.speechSynthesis.getVoices() || [];
+    try {
+      voices = window.speechSynthesis.getVoices() || [];
+      if (voices.length) voicesLoaded = true;
+    } catch (e) {
+      voices = [];
+    }
   }
   if ("speechSynthesis" in window) {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }
 
+  let lastSpeakErr = "";
+
   function speak(text) {
-    if (!("speechSynthesis" in window) || !text) return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "en-US";
-      u.rate = clamp(Number(S.set.rate) || 0.9, 0.5, 1.5);
-      const pick =
-        voices.find((v) => /en[-_]US/i.test(v.lang)) ||
-        voices.find((v) => /^en/i.test(v.lang));
-      if (pick) u.voice = pick;
-      window.speechSynthesis.speak(u);
-    } catch (e) {
-      /* 忽略 */
+    if (!text) return;
+    if (!("speechSynthesis" in window)) {
+      toast("这个浏览器不支持朗读，换 Edge 或 Chrome 试试。", "warn");
+      return;
+    }
+    const synth = window.speechSynthesis;
+
+    const say = function () {
+      try {
+        if (synth.paused) synth.resume();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "en-US";
+        u.rate = clamp(Number(S.set.rate) || 0.9, 0.5, 1.5);
+        u.volume = 1;
+        const pick =
+          voices.find((v) => /en[-_]US/i.test(v.lang)) ||
+          voices.find((v) => /^en/i.test(v.lang));
+        if (pick) u.voice = pick;
+        u.onerror = function (e) {
+          lastSpeakErr = (e && e.error) || "unknown";
+          toast("朗读失败：" + lastSpeakErr, "warn");
+        };
+        synth.speak(u);
+        /* 兜底：说完了但系统静音/没语音时给个提示 */
+        setTimeout(function () {
+          if (!synth.speaking && !synth.pending && lastSpeakErr) return;
+          if (!voices.length && !voicesLoaded) {
+            toast("系统里没找到语音包，Windows 设置 → 时间和语言 → 语音 里装一个英语语音。", "warn");
+          }
+        }, 600);
+      } catch (e) {
+        lastSpeakErr = e.message;
+        toast("朗读出错：" + e.message, "warn");
+      }
+    };
+
+    /* Chrome：cancel 完立刻 speak 会被吞，中间隔一帧 */
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+      setTimeout(say, 80);
+    } else {
+      say();
     }
   }
 
@@ -1532,7 +1569,9 @@
 
       '<div class="set-row"><div><div class="set-label">发音速度</div>' +
       '<div class="set-desc">慢一点，跟着读出来。会读才拼得对。</div></div>' +
-      '<div class="set-control"><select class="field" data-set="rate" data-num="1">' +
+      '<div class="set-control" style="display:flex;gap:8px;align-items:center">' +
+      '<button class="btn" data-act="test-voice">试听</button>' +
+      '<select class="field" data-set="rate" data-num="1">' +
       '<option value="0.7"' + (Number(S.set.rate) === 0.7 ? " selected" : "") + ">慢</option>" +
       '<option value="0.9"' + (Number(S.set.rate) === 0.9 ? " selected" : "") + ">正常</option>" +
       '<option value="1.1"' + (Number(S.set.rate) === 1.1 ? " selected" : "") + ">快</option>" +
@@ -1675,6 +1714,16 @@
     }
     if (act === "speak") {
       speak(el.dataset.text);
+      return;
+    }
+    if (act === "test-voice") {
+      if (!("speechSynthesis" in window)) {
+        toast("这个浏览器不支持朗读。", "warn");
+        return;
+      }
+      loadVoices();
+      toast("共 " + voices.length + " 个语音 · " + (voices.filter((v) => /^en/i.test(v.lang)).length) + " 个英语语音");
+      speak("This is a test. Hello, world.");
       return;
     }
     if (act === "pick") {
