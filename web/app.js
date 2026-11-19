@@ -507,7 +507,7 @@
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }
 
-  let lastSpeakErr = "";
+  let lastErrAt = 0;
 
   function speak(text) {
     if (!text) return;
@@ -516,6 +516,12 @@
       return;
     }
     const synth = window.speechSynthesis;
+
+    /* 被新的一句打断时浏览器会发 canceled / interrupted，
+       这是正常现象，不能当失败弹提示 */
+    const isBenign = function (err) {
+      return err === "canceled" || err === "interrupted";
+    };
 
     const say = function () {
       try {
@@ -529,19 +535,16 @@
           voices.find((v) => /^en/i.test(v.lang));
         if (pick) u.voice = pick;
         u.onerror = function (e) {
-          lastSpeakErr = (e && e.error) || "unknown";
-          toast("朗读失败：" + lastSpeakErr, "warn");
+          const err = (e && e.error) || "";
+          if (isBenign(err)) return;
+          if (Date.now() - lastErrAt < 5000) return;
+          lastErrAt = Date.now();
+          toast("朗读失败：" + (err || "未知"), "warn");
         };
         synth.speak(u);
-        /* 兜底：说完了但系统静音/没语音时给个提示 */
-        setTimeout(function () {
-          if (!synth.speaking && !synth.pending && lastSpeakErr) return;
-          if (!voices.length && !voicesLoaded) {
-            toast("系统里没找到语音包，Windows 设置 → 时间和语言 → 语音 里装一个英语语音。", "warn");
-          }
-        }, 600);
       } catch (e) {
-        lastSpeakErr = e.message;
+        if (Date.now() - lastErrAt < 5000) return;
+        lastErrAt = Date.now();
         toast("朗读出错：" + e.message, "warn");
       }
     };
