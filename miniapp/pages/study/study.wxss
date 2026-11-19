@@ -223,3 +223,49 @@
   color: #16262b;
   margin-bottom: 20rpx;
 }
+
+/* ---------- 记忆联动 ---------- */
+
+.memo {
+  margin-top: 32rpx;
+  padding-top: 22rpx;
+  border-top: 1rpx dashed #d6dbd0;
+}
+
+.memo-row {
+  display: flex;
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: #3d4f52;
+  margin-bottom: 6rpx;
+}
+
+.memo-k {
+  flex-shrink: 0;
+  width: 64rpx;
+  font-size: 20rpx;
+  letter-spacing: 2rpx;
+  color: #6b7c7c;
+  padding-top: 4rpx;
+}
+
+.memo-v {
+  flex: 1;
+  min-width: 0;
+}
+
+.memo-t {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28rpx;
+  color: #0b5548;
+}
+
+.memo-g {
+  color: #6b7c7c;
+  margin-left: 8rpx;
+}
+
+.memo-dot {
+  color: #b9c2b6;
+  margin: 0 10rpx;
+}

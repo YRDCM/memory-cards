@@ -90,6 +90,98 @@ function buildCloze(w) {
   };
 }
 
+/* ---------- 记忆联动：同族词 + 词缀拆解 ---------- */
+
+/* 只保留不容易误拆的前缀（in- / de- / ex- 这类会和词干混淆，弃用） */
+const PREFIX_CN = {
+  un: "不", re: "再；重新", dis: "相反；否定", non: "非",
+  pre: "预先", post: "之后", over: "过度", under: "不足；在下", mis: "错误地",
+  out: "超过；向外", anti: "反对", auto: "自动", multi: "多",
+  sub: "下面", super: "超越", tele: "远", self: "自我",
+  semi: "半", mini: "小", mid: "中间", inter: "之间",
+};
+
+const SUFFIX_CN = {
+  tion: "名词：动作或状态", sion: "名词：动作或状态", ment: "名词：结果",
+  ness: "名词：性质", ity: "名词：性质", able: "形容词：能…的",
+  ible: "形容词：能…的", ful: "形容词：充满…的", less: "形容词：无…的",
+  ly: "副词后缀", er: "名词：人／物", ist: "名词：人", ism: "名词：主义",
+  ize: "动词：使…", ous: "形容词：有…性质", ive: "形容词后缀",
+  al: "形容词后缀", ic: "形容词后缀", ship: "名词：身份", hood: "名词：身份",
+};
+
+function shortGloss(cn) {
+  const s = String(cn || "").split(/[；;，,]/)[0].trim();
+  return s.length > 8 ? s.slice(0, 8) : s;
+}
+
+function familyOf(w) {
+  const all = store.all();
+  const word = w.id;
+  const hits = [];
+  for (let i = 0; i < all.length && hits.length < 8; i++) {
+    const x = all[i];
+    if (x.id === word) continue;
+    if (x.id.length >= 4 && (x.id.indexOf(word) === 0 || (word.length >= 4 && x.id.slice(-word.length) === word))) {
+      hits.push(x);
+      continue;
+    }
+    if (x.id.length >= 3 && word.indexOf(x.id) === 0) hits.push(x);
+  }
+  return hits.slice(0, 6);
+}
+
+function splitWord(w) {
+  const map = store.map();
+  const word = w.id;
+  const has = function (s) {
+    return !!map[s];
+  };
+  for (const p in PREFIX_CN) {
+    if (word.length - p.length < 3) continue;
+    if (word.indexOf(p) !== 0) continue;
+    const rest = word.slice(p.length);
+    if (!has(rest)) continue;
+    return [
+      { t: p + "-", g: PREFIX_CN[p] },
+      { t: rest, g: shortGloss((map[rest] || {}).cn) },
+    ];
+  }
+  for (const s in SUFFIX_CN) {
+    if (word.length - s.length < 3) continue;
+    if (word.slice(-s.length) !== s) continue;
+    const base = word.slice(0, word.length - s.length);
+    let hit = has(base) ? base : has(base + "e") ? base + "e" : null;
+    if (!hit && base.slice(-1) === "i" && has(base.slice(0, -1) + "y")) {
+      hit = base.slice(0, -1) + "y";
+    }
+    if (!hit) continue;
+    return [
+      { t: hit, g: shortGloss((map[hit] || {}).cn) },
+      { t: "-" + s, g: SUFFIX_CN[s] },
+    ];
+  }
+  return null;
+}
+
+function memoOf(w) {
+  const parts = splitWord(w);
+  const used = {};
+  if (parts) {
+    parts.forEach(function (p) {
+      used[p.t.replace(/-/g, "").toLowerCase()] = 1;
+    });
+  }
+  const fam = familyOf(w)
+    .filter(function (x) {
+      return !used[x.id];
+    })
+    .map(function (x) {
+      return { w: x.w, g: shortGloss(x.cn) };
+    });
+  return { parts: parts || [], fam: fam };
+}
+
 Page({
   data: {
     idx: 1,
@@ -118,6 +210,8 @@ Page({
     cloze: null,
     quizTag: "",
     hintCn: "",
+    memoParts: [],
+    memoFam: [],
     keys: ["A", "B", "C", "D"],
   },
 
@@ -180,6 +274,7 @@ Page({
     const p = store.state().prog[id];
     const isNew = !p;
     const mode = this.pickMode(w, isNew);
+    const memo = memoOf(w);
     const n1 = srs.nextInterval(p, 1);
     const n2 = srs.nextInterval(p, 2);
     const n3 = srs.nextInterval(p, 3);
@@ -204,6 +299,8 @@ Page({
       correctIdx: -1,
       cloze: null,
       quizTag: "",
+      memoParts: memo.parts,
+      memoFam: memo.fam,
       pre1: srs.fmtDays(n1),
       pre2: srs.fmtDays(n2),
       pre3: srs.fmtDays(n3),

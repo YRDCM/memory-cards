@@ -79,6 +79,29 @@
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}</view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
+
+        <view wx:if="{{memoParts.length || memoFam.length}}" class="memo">
+          <view wx:if="{{memoParts.length}}" class="memo-row">
+            <text class="memo-k">拆解</text>
+            <view class="memo-v">
+              <block wx:for="{{memoParts}}" wx:key="index">
+                <text wx:if="{{index > 0}}" class="memo-dot">+</text>
+                <text class="memo-t">{{item.t}}</text>
+                <text class="memo-g">{{item.g}}</text>
+              </block>
+            </view>
+          </view>
+          <view wx:if="{{memoFam.length}}" class="memo-row">
+            <text class="memo-k">词族</text>
+            <view class="memo-v">
+              <block wx:for="{{memoFam}}" wx:key="index">
+                <text wx:if="{{index > 0}}" class="memo-dot">·</text>
+                <text class="memo-t">{{item.w}}</text>
+                <text class="memo-g">{{item.g}}</text>
+              </block>
+            </view>
+          </view>
+        </view>
       </view>
       <view class="fc-foot">
         <view class="btn btn-primary btn-block" bindtap="onQuizNext">继续</view>
@@ -105,6 +128,29 @@
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}</view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
+
+        <view wx:if="{{memoParts.length || memoFam.length}}" class="memo">
+          <view wx:if="{{memoParts.length}}" class="memo-row">
+            <text class="memo-k">拆解</text>
+            <view class="memo-v">
+              <block wx:for="{{memoParts}}" wx:key="index">
+                <text wx:if="{{index > 0}}" class="memo-dot">+</text>
+                <text class="memo-t">{{item.t}}</text>
+                <text class="memo-g">{{item.g}}</text>
+              </block>
+            </view>
+          </view>
+          <view wx:if="{{memoFam.length}}" class="memo-row">
+            <text class="memo-k">词族</text>
+            <view class="memo-v">
+              <block wx:for="{{memoFam}}" wx:key="index">
+                <text wx:if="{{index > 0}}" class="memo-dot">·</text>
+                <text class="memo-t">{{item.w}}</text>
+                <text class="memo-g">{{item.g}}</text>
+              </block>
+            </view>
+          </view>
+        </view>
       </view>
 
       <view class="grades">
