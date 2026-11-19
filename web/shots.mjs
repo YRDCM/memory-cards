@@ -75,6 +75,15 @@ const seedSpell =
   JSON.stringify(JSON.stringify(spellState)) +
   ")}catch(e){}</script>";
 
+/* 已同步（锁定态）的种子，用于截设置页 */
+const syncedState = JSON.parse(JSON.stringify(state));
+syncedState.set.syncCode = "ndq92nwqajveqv43em5um39y";
+syncedState.sync = { rev: 2, at: Date.now(), err: false };
+const seedSynced =
+  "<script>try{localStorage.setItem('eyc_v1'," +
+  JSON.stringify(JSON.stringify(syncedState)) +
+  ")}catch(e){}</script>";
+
 const variants = {
   today: "",
   first: "",
@@ -84,6 +93,7 @@ const variants = {
   words: `document.querySelector('[data-act=go][data-view=words]').click();`,
   stats: `document.querySelector('[data-act=go][data-view=stats]').click();`,
   settings: `document.querySelector('[data-act=go][data-view=settings]').click();`,
+  "settings-locked": `document.querySelector('[data-act=go][data-view=settings]').click();`,
   spell: `document.querySelector('[data-act=start]').click();`,
   flow: `
     var out = [];
@@ -126,13 +136,19 @@ const variants = {
 
 const noSeed = new Set(["first"]);
 const spellSeed = new Set(["spell"]);
+const syncedSeed = new Set(["settings-locked"]);
 
 let n = 0;
 for (const [name, act] of Object.entries(variants)) {
   const tail = `<script>setTimeout(function(){${act}},80);</script>`;
-  let out = noSeed.has(name)
-    ? html.replace("<body>", "<body>\n<script>try{localStorage.clear()}catch(e){}</script>")
-    : html.replace("<body>", "<body>\n" + (spellSeed.has(name) ? seedSpell : seed));
+  const seedHtml = noSeed.has(name)
+    ? "<script>try{localStorage.clear()}catch(e){}</script>"
+    : syncedSeed.has(name)
+    ? seedSynced
+    : spellSeed.has(name)
+    ? seedSpell
+    : seed;
+  let out = html.replace("<body>", "<body>\n" + seedHtml);
   out = out.replace("</body>", tail + "\n</body>");
   fs.writeFileSync(path.join(here, "_t-" + name + ".html"), out, "utf8");
   n++;

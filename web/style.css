@@ -1175,6 +1175,33 @@ textarea {
 .sync-status.bad {
   color: var(--warn);
 }
+.sync-status.good {
+  color: var(--good);
+}
+
+.sync-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pill-ok {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--good);
+  background: #e3f0e8;
+  padding: 1px 9px;
+  border-radius: 999px;
+}
+
+.sync-input.is-locked {
+  background: #eef0ea;
+  color: #8c9b98;
+  cursor: not-allowed;
+}
+.sync-input:disabled {
+  opacity: 1;
+}
 
 /* ---------- 提示条 ---------- */
 

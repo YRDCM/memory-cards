@@ -283,6 +283,12 @@
   let pushing = false;
   let applyingRemote = false;
   let pushTimer = null;
+  let syncUnlocked = false;
+
+  /* 同步成功后锁定输入框，点「更换」才解锁 */
+  function syncLocked() {
+    return !!S.set.syncCode && !!S.sync.at && !S.sync.err && !syncUnlocked;
+  }
 
   const syncable = () =>
     !!S.set.syncCode && S.set.syncOn !== false && location.protocol !== "file:";
@@ -424,6 +430,7 @@
         S.sync.rev = j.rev || 0;
         S.sync.at = Date.now();
         S.sync.err = false;
+        syncUnlocked = false;
         render();
         await pushNow();
       }
@@ -1259,15 +1266,21 @@
       "</select></div></div>" +
 
       '<div class="set-row set-row-stack"><div>' +
-      '<div class="set-label">多设备同步</div>' +
+      '<div class="sync-head"><span class="set-label">多设备同步</span>' +
+      (syncLocked() ? '<span class="pill-ok">✓ 已同步</span>' : "") +
+      "</div>" +
       '<div class="set-desc">手机和电脑填同一个同步码，进度就会自动合并。同步码相当于密码，别发到公开的地方。</div>' +
       '<div class="sync-line">' +
-      '<input class="field sync-input" id="sync-code" value="' + esc(S.set.syncCode || "") +
-      '" placeholder="点「生成」，或粘贴另一台设备的同步码" spellcheck="false" autocomplete="off">' +
-      '<button class="btn" data-act="sync-gen">生成</button>' +
-      '<button class="btn btn-primary" data-act="sync-save">' + (S.set.syncCode ? "立即同步" : "启用") + "</button>" +
+      '<input class="field sync-input' + (syncLocked() ? " is-locked" : "") + '" id="sync-code" value="' + esc(S.set.syncCode || "") +
+      '" placeholder="点「生成」，或粘贴另一台设备的同步码" spellcheck="false" autocomplete="off"' +
+      (syncLocked() ? " disabled" : "") + ">" +
+      (syncLocked()
+        ? '<button class="btn" data-act="sync-copy">复制同步码</button>' +
+          '<button class="btn" data-act="sync-unlock">更换同步码</button>'
+        : '<button class="btn" data-act="sync-gen">生成</button>' +
+          '<button class="btn btn-primary" data-act="sync-save">' + (S.set.syncCode ? "立即同步" : "启用") + "</button>") +
       "</div>" +
-      '<div class="sync-status' + (S.sync.err ? " bad" : "") + '">' + esc(syncStatusText()) + "</div>" +
+      '<div class="sync-status' + (S.sync.err ? " bad" : syncLocked() ? " good" : "") + '">' + esc(syncStatusText()) + "</div>" +
       "</div></div>" +
 
       '<div class="set-row"><div><div class="set-label">备份与恢复</div>' +
@@ -1448,10 +1461,27 @@
       S.sync.rev = 0;
       S.sync.at = 0;
       S.sync.err = false;
+      syncUnlocked = true;
       persist();
       render();
       toast("同步码已生成。在另一台设备上填同一个码就行。");
       pullNow(true);
+      return;
+    }
+    if (act === "sync-unlock") {
+      syncUnlocked = true;
+      render();
+      toast("已解锁，改完记得点「启用」。");
+      return;
+    }
+    if (act === "sync-copy") {
+      const code = S.set.syncCode || "";
+      if (code && navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(
+          () => toast("同步码已复制"),
+          () => toast("复制失败，请手动选中", "warn")
+        );
+      }
       return;
     }
     if (act === "sync-save") {
