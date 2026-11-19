@@ -1154,102 +1154,6 @@
   }
 
   /* ========== 视图：统计 ========== */
-  /* 十二宫数据面板：借用星语站的星盘语言 */
-  function starPanel() {
-    const W = 1120;
-    const H = 600;
-    const cx = W / 2;
-    const cy = H / 2 + 4;
-    const R = 226;
-    const NR = 52;
-
-    const d = day();
-    let sumCards = 0;
-    let sumNew = 0;
-    let sumSec = 0;
-    let sumCorrect = 0;
-    Object.keys(S.daily).forEach((k) => {
-      const x = S.daily[k];
-      sumCards += x.cards || 0;
-      sumNew += x.newW || 0;
-      sumSec += x.sec || 0;
-      sumCorrect += x.correct || 0;
-    });
-    const learned = learnedCount();
-    const due = dueList().length;
-    const goal = S.set.dailyNew;
-    const pctNew = Math.min(d.newW, goal) / Math.max(1, goal);
-    const pctMin = Math.min(d.sec / 60, S.set.targetMin) / Math.max(1, S.set.targetMin);
-    const todayPct = Math.round((pctNew * 0.7 + pctMin * 0.3) * 100);
-    const keep = Math.round(avgRetention() * 100);
-
-    const nodes = [
-      { v: d.newW + "/" + goal, l: "今日新词", tone: d.newW >= goal ? "gold" : "" },
-      { v: Math.round(d.sec / 60), l: "今日分钟", tone: d.sec / 60 >= S.set.targetMin ? "gold" : "" },
-      { v: streak(), l: "连续打卡", tone: streak() > 0 ? "gold" : "" },
-      { v: bestStreak(), l: "最长连续", tone: "" },
-      { v: learned, l: "已学词数", tone: "jade" },
-      { v: due, l: "待复习", tone: due > 0 ? "red" : "jade" },
-      { v: keep + "%", l: "平均保持率", tone: keep >= 66 ? "jade" : keep >= 33 ? "gold" : "red" },
-      { v: sumCards, l: "累计卡片", tone: "" },
-      { v: sumNew, l: "累计新词", tone: "" },
-      { v: Math.round(sumSec / 60), l: "累计分钟", tone: "" },
-      { v: sumCards ? Math.round((sumCorrect / sumCards) * 100) + "%" : "—", l: "一次答对率", tone: "jade" },
-      {
-        v: Math.round((learned / Math.max(1, ALL.length)) * 100) + "%",
-        l: "词库覆盖",
-        tone: "",
-      },
-    ];
-
-    const toneColor = { gold: "#E8C47C", jade: "#7FBF9E", red: "#C25E5E", "": "rgba(232,196,124,.28)" };
-
-    let s = "";
-    nodes.forEach((n, i) => {
-      const a = -Math.PI / 2 + (i * Math.PI) / 6;
-      const x = cx + R * Math.cos(a);
-      const y = cy + R * Math.sin(a);
-      const accent = toneColor[n.tone] || toneColor[""];
-      s +=
-        '<g class="starnode">' +
-        '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + NR +
-        '" fill="rgba(27,23,64,0.82)" stroke="' + accent + '" stroke-width="' + (n.tone ? 1.6 : 1) + '"/>' +
-        '<text x="' + x.toFixed(1) + '" y="' + (y - 2).toFixed(1) +
-        '" text-anchor="middle" font-size="19" font-family="Consolas,monospace" fill="' +
-        (n.tone ? accent : "#E8E6F0") + '">' + esc(n.v) + "</text>" +
-        '<text x="' + x.toFixed(1) + '" y="' + (y + 18).toFixed(1) +
-        '" text-anchor="middle" font-size="10.5" fill="#8B87B0" letter-spacing="1">' + esc(n.l) + "</text>" +
-        "</g>";
-    });
-
-    /* 环上刻度：画在节点内侧，作为「十二宫」的细分 */
-    let ticks = "";
-    for (let i = 0; i < 72; i++) {
-      const a = (i * Math.PI) / 36;
-      const r1 = R - 74;
-      const r2 = R - (i % 6 === 0 ? 62 : 68);
-      ticks +=
-        '<line x1="' + (cx + r1 * Math.cos(a)).toFixed(1) + '" y1="' + (cy + r1 * Math.sin(a)).toFixed(1) +
-        '" x2="' + (cx + r2 * Math.cos(a)).toFixed(1) + '" y2="' + (cy + r2 * Math.sin(a)).toFixed(1) +
-        '" stroke="rgba(232,196,124,' + (i % 6 === 0 ? 0.3 : 0.12) + ')" stroke-width="1"/>';
-    }
-
-    return (
-      '<div class="star-panel">' +
-      '<svg class="star-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="数据面板">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="rgba(232,196,124,.18)" stroke-width="1"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R - 74) + '" fill="none" stroke="rgba(232,196,124,.1)" stroke-width="1"/>' +
-      ticks +
-      s +
-      '<text x="' + cx + '" y="' + (cy - 26) + '" text-anchor="middle" font-size="11.5" fill="#8B87B0" letter-spacing="4">今日完成度</text>' +
-      '<text x="' + cx + '" y="' + (cy + 52) + '" text-anchor="middle" font-size="86" font-family="Georgia,serif" fill="#E8C47C">' +
-      todayPct + '<tspan font-size="30" fill="rgba(232,196,124,.6)">%</tspan></text>' +
-      '<text x="' + cx + '" y="' + (cy + 84) + '" text-anchor="middle" font-size="11" font-family="Consolas,monospace" fill="#8B87B0" letter-spacing="2">' +
-      todayKey() + "</text>" +
-      "</svg></div>"
-    );
-  }
-
   function viewStats() {
     const days = Object.keys(S.daily).filter((k) => S.daily[k].cards > 0);
     let cards = 0;
@@ -1284,7 +1188,6 @@
       "</div>";
 
     return (
-      starPanel() +
       cardsHTML +
       '<div class="today-grid stats-grid" style="margin-bottom:20px">' +
       '<section class="panel" style="padding:18px 20px"><div class="panel-head" style="padding:0 0 14px">' +
