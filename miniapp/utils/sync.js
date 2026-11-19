@@ -29,6 +29,19 @@ function enabled() {
   return !!S.set.syncCode && S.set.syncOn !== false;
 }
 
+function setErr(msg) {
+  const S = store.state();
+  S.sync.err = true;
+  S.sync.msg = msg || "";
+  store.save();
+}
+
+function clearErr() {
+  const S = store.state();
+  S.sync.err = false;
+  S.sync.msg = "";
+}
+
 /** 合并：每个词取最近复习的那份 */
 function merge(local, remote) {
   if (!remote || !remote.prog) return null;
@@ -115,18 +128,16 @@ async function push() {
     if (res.statusCode === 200 && res.data) {
       S.sync.rev = res.data.rev || 0;
       S.sync.at = Date.now();
-      S.sync.err = false;
+      clearErr();
       store.save();
       pushing = false;
       return { ok: true };
     }
-    S.sync.err = true;
-    store.save();
+    setErr("服务器返回 " + res.statusCode);
     pushing = false;
     return { ok: false, status: res.statusCode };
   } catch (e) {
-    S.sync.err = true;
-    store.save();
+    setErr(e && e.errMsg ? e.errMsg : "请求失败");
     pushing = false;
     return { ok: false, error: e };
   }
@@ -142,21 +153,19 @@ async function pull() {
       return push();
     }
     if (res.statusCode !== 200 || !res.data || !res.data.state) {
-      S.sync.err = true;
-      store.save();
+      setErr("服务器返回 " + res.statusCode);
       return { ok: false, status: res.statusCode };
     }
     const m = merge(S, res.data.state);
     if (m) apply(m);
     S.sync.rev = res.data.rev || 0;
     S.sync.at = Date.now();
-    S.sync.err = false;
+    clearErr();
     store.save();
     await push();
     return { ok: true };
   } catch (e) {
-    S.sync.err = true;
-    store.save();
+    setErr(e && e.errMsg ? e.errMsg : "请求失败");
     return { ok: false, error: e };
   }
 }
@@ -182,7 +191,7 @@ function newCode() {
 function statusText() {
   const S = store.state();
   if (!S.set.syncCode) return "未启用。填一个同步码，手机和电脑就能共用进度。";
-  if (S.sync.err) return "同步失败 —— 检查网络，或确认后台已配置服务器域名。";
+  if (S.sync.err) return "同步失败：" + (S.sync.msg || "未知原因");
   if (!S.sync.at) return "已填写同步码，等待第一次同步…";
   const d = new Date(S.sync.at);
   return (

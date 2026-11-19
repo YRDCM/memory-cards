@@ -131,10 +131,19 @@ Page({
       return;
     }
     wx.showLoading({ title: "同步中" });
-    sync.pull().then(() => {
+    sync.pull().then((r) => {
       wx.hideLoading();
       this.refresh();
-      wx.showToast({ title: store.state().sync.err ? "同步失败" : "同步完成", icon: "none" });
+      const S = store.state();
+      if (S.sync.err) {
+        wx.showModal({
+          title: "同步失败",
+          content: (S.sync.msg || "未知原因") + "\n\n如果是 request:fail，多半是服务器域名没配：小程序后台 → 开发管理 → 开发设置 → 服务器域名 → request 合法域名，加上 https://mystarwhisper.cn，然后重新扫码预览。",
+          showCancel: false,
+        });
+      } else {
+        wx.showToast({ title: "同步完成", icon: "none" });
+      }
     });
   },
 
