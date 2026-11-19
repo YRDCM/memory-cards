@@ -842,19 +842,10 @@ textarea {
   border-radius: 16px;
   box-shadow: inset 0 1px 0 #fff, 0 2px 4px rgba(22, 38, 43, 0.05),
     0 22px 44px -32px rgba(22, 38, 43, 0.7);
-  padding: 40px 44px 34px 56px;
+  padding: 40px 44px 34px 44px;
   min-height: 288px;
   display: flex;
   flex-direction: column;
-}
-.flashcard::before {
-  content: "";
-  position: absolute;
-  left: 34px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: rgba(180, 71, 42, 0.28);
 }
 .fc-tab {
   position: absolute;
@@ -1514,12 +1505,9 @@ button,
     gap: 10px;
   }
   .flashcard {
-    padding: 30px 18px 20px 30px;
+    padding: 30px 18px 20px 18px;
     min-height: 320px;
     border-radius: 14px;
-  }
-  .flashcard::before {
-    left: 18px;
   }
   .fc-tab {
     top: 12px;
