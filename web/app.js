@@ -943,177 +943,6 @@
     );
   }
 
-  /* ---------- 全屏遗忘地图（可缩放 / 拖动 / 显示单词） ---------- */
-  let mapOpen = false;
-  const mapView = { k: 1, x: 0, y: 0 };
-  const MAP_FW = 1600;
-  const MAP_FH = 1000;
-
-  function hashOf(s) {
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0) / 4294967295;
-  }
-
-  function mapFullHTML() {
-    if (!mapOpen) return "";
-    const W = MAP_FW;
-    const H = MAP_FH;
-    const padL = 74;
-    const padR = 46;
-    const padT = 30;
-    const padB = 54;
-    const iw = W - padL - padR;
-    const ih = H - padT - padB;
-    const xOf = (t) => padL + iw * clamp(Math.log1p(t) / Math.log1p(60), 0, 1);
-    const yOf = (r) => padT + ih * (1 - clamp(r, 0, 1));
-
-    let g = "";
-
-    [0, 0.25, 0.5, 0.75, 1].forEach((r) => {
-      const y = yOf(r);
-      g +=
-        '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y +
-        '" stroke="#d6dbd0" stroke-width="1" stroke-dasharray="' + (r === 0 ? "0" : "3 6") + '"/>';
-      g +=
-        '<text x="' + (padL - 12) + '" y="' + (y + 5) +
-        '" text-anchor="end" font-size="14" font-family="Consolas,monospace" fill="#8c9b98">' +
-        Math.round(r * 100) + "%</text>";
-    });
-
-    [0.1, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 14, 21, 30, 45, 60].forEach((t) => {
-      const x = xOf(t);
-      const label = t === 7 ? "1周" : t === 14 ? "2周" : t === 30 ? "1月" : t === 60 ? "2月" : t < 1 ? Math.round(t * 24) + "时" : t + "天";
-      g +=
-        '<line x1="' + x + '" y1="' + padT + '" x2="' + x + '" y2="' + (H - padB) +
-        '" stroke="#e9ece2" stroke-width="1"/>';
-      g +=
-        '<text x="' + x + '" y="' + (H - padB + 20) +
-        '" text-anchor="middle" font-size="13" font-family="Consolas,monospace" fill="#8c9b98">' +
-        label + "</text>";
-    });
-
-    const learned = ALL.filter((w) => S.prog[w.id]);
-    let tau = 0;
-    learned.forEach((w) => (tau += Math.max(0.6, (S.prog[w.id].i || 0.6) * 1.6)));
-    tau = learned.length ? tau / learned.length : 3;
-    let dstr = "";
-    for (let t = 0; t <= 60; t += 0.5) {
-      dstr += (t === 0 ? "M" : "L") + xOf(t).toFixed(1) + " " + yOf(Math.exp(-t / tau)).toFixed(1) + " ";
-    }
-    g +=
-      '<path d="' + dstr + '" fill="none" stroke="#16262b" stroke-opacity="0.2" stroke-width="1.6" stroke-dasharray="7 7"/>';
-
-    /* 位置几乎相同的词用确定性抖动散开，放大后才看得见一个个点 */
-    learned.slice(0, 1400).forEach((w) => {
-      const p = S.prog[w.id];
-      const t = (Date.now() - (p.seen || Date.now())) / DAY;
-      const r = retention(p);
-      const jx = (hashOf(w.id + "x") - 0.5) * 16;
-      const jy = (hashOf(w.id + "y") - 0.5) * 26;
-      const x = xOf(Math.max(0.02, t)) + jx;
-      const y = yOf(r) + jy;
-      const color = r >= 0.66 ? "#0f6b5c" : r >= 0.33 ? "#c9902a" : "#b4472a";
-      const hours = Math.round((Date.now() - (p.seen || Date.now())) / 3600000);
-      const when = hours < 48 ? Math.max(1, hours) + " 小时前" : Math.round(hours / 24) + " 天前";
-      g +=
-        '<circle class="fdot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) +
-        '" r="5.4" fill="' + color + '" fill-opacity="0.8"><title>' +
-        esc(w.w) + " · " + esc(w.cn) + " · " + when + " · 保持 " + Math.round(r * 100) + "%</title></circle>";
-      g +=
-        '<text class="flbl" x="' + (x + 9).toFixed(1) + '" y="' + (y + 5).toFixed(1) +
-        '" font-size="15" font-family="Georgia,serif" fill="#16262b">' + esc(w.w) + "</text>";
-    });
-
-    return (
-      '<div class="mapfull">' +
-      '<div class="mapfull-bar">' +
-      '<b>遗忘地图</b>' +
-      '<span class="mapfull-hint">滚轮缩放 · 拖动平移 · 双击复位 · 放大后显示单词</span>' +
-      '<span class="mapfull-count">' + learned.length + " 个词</span>" +
-      '<button class="icon-btn" data-act="map-close" aria-label="关闭">✕</button>' +
-      "</div>" +
-      '<svg id="mapfsvg" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="xMidYMid meet">' +
-      '<g id="mapg" transform="translate(0,0) scale(1)">' + g + "</g></svg>" +
-      "</div>"
-    );
-  }
-
-  function setupMapFull() {
-    const svg = $("#mapfsvg");
-    const g = $("#mapg");
-    if (!svg || !g) return;
-    const apply = function () {
-      g.setAttribute(
-        "transform",
-        "translate(" + mapView.x.toFixed(2) + "," + mapView.y.toFixed(2) + ") scale(" + mapView.k.toFixed(3) + ")"
-      );
-      g.classList.toggle("show-lbl", mapView.k >= 1.7);
-    };
-    const toUser = function (ev) {
-      try {
-        const pt = svg.createSVGPoint();
-        pt.x = ev.clientX;
-        pt.y = ev.clientY;
-        const m = svg.getScreenCTM();
-        if (!m) return { x: 0, y: 0 };
-        return pt.matrixTransform(m.inverse());
-      } catch (e) {
-        return { x: 0, y: 0 };
-      }
-    };
-
-    svg.addEventListener(
-      "wheel",
-      function (e) {
-        e.preventDefault();
-        const loc = toUser(e);
-        const f = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-        const k2 = clamp(mapView.k * f, 0.7, 16);
-        mapView.x = loc.x - (loc.x - mapView.x) * (k2 / mapView.k);
-        mapView.y = loc.y - (loc.y - mapView.y) * (k2 / mapView.k);
-        mapView.k = k2;
-        apply();
-      },
-      { passive: false }
-    );
-
-    let drag = null;
-    svg.addEventListener("pointerdown", function (e) {
-      drag = toUser(e);
-      svg.setPointerCapture(e.pointerId);
-      svg.classList.add("dragging");
-    });
-    svg.addEventListener("pointermove", function (e) {
-      if (!drag) return;
-      const now = toUser(e);
-      mapView.x += now.x - drag.x;
-      mapView.y += now.y - drag.y;
-      drag = now;
-      apply();
-    });
-    const end = function (e) {
-      if (!drag) return;
-      drag = null;
-      svg.classList.remove("dragging");
-      try {
-        svg.releasePointerCapture(e.pointerId);
-      } catch (err) {}
-    };
-    svg.addEventListener("pointerup", end);
-    svg.addEventListener("pointercancel", end);
-    svg.addEventListener("dblclick", function () {
-      mapView.k = 1;
-      mapView.x = 0;
-      mapView.y = 0;
-      apply();
-    });
-    apply();
-  }
-
   function mapSVG() {
     const narrow = isNarrow();
     const W = narrow ? 360 : 880;
@@ -1284,7 +1113,6 @@
       '<div class="map-stat' + (due ? " danger" : "") + '"><b>' + due + "</b><span>待复习</span></div>" +
       '<div class="map-stat"><b>' + learned + "</b><span>已学</span></div>" +
       '<div class="map-stat"><b>' + Math.round(avgRetention() * 100) + "%</b><span>平均保持率</span></div>" +
-      '<button class="btn btn-sm map-open" data-act="map-full">放大看</button>' +
       "</div></div>" +
       '<div class="map-wrap">' + mapSVG() + "</div>" +
       '<div class="map-foot">' +
@@ -1834,14 +1662,12 @@
       "</div></div></header>" +
       '<div class="shell' + (v === "study" ? " is-study" : "") + '">' + (storageOK ? "" : warnBar()) + body + "</div>" +
       (v === "study" ? "" : '<nav class="tabbar">' + tabs + "</nav>") +
-      mapFullHTML() +
       '<div class="toast-wrap" id="toasts"></div>';
 
     document.title = "记忆卡片盒";
 
     const sp = $("#spell") || $("#cloze");
     if (sp) sp.focus();
-    if (mapOpen) setupMapFull();
   }
 
   function warnBar() {
@@ -1870,14 +1696,6 @@
     window.scrollTo({ top: 0 });
     render();
   }
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && mapOpen) {
-      e.preventDefault();
-      mapOpen = false;
-      render();
-    }
-  });
 
   /* ========== 事件 ========== */
   document.addEventListener("click", function (e) {
@@ -1991,19 +1809,6 @@
     }
     if (act === "filter") {
       wordFilter = el.dataset.f;
-      render();
-      return;
-    }
-    if (act === "map-full") {
-      mapOpen = true;
-      mapView.k = 1;
-      mapView.x = 0;
-      mapView.y = 0;
-      render();
-      return;
-    }
-    if (act === "map-close") {
-      mapOpen = false;
       render();
       return;
     }
