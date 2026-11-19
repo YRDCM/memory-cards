@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>记忆卡片盒 · 管理后台</title>
+<meta name="robots" content="noindex, nofollow" />
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --panel: #ffffff;
+    --line: #e5e7eb;
+    --line-2: #f1f2f4;
+    --ink: #111827;
+    --ink-2: #374151;
+    --muted: #6b7280;
+    --faint: #9ca3af;
+    --brand: #0f6b5c;
+    --good: #2e7d5b;
+    --warn: #b45309;
+    --bad: #b91c1c;
+    --mono: Consolas, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 13px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+
+  /* 顶栏 */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    height: 56px; display: flex; align-items: center; gap: 14px;
+    padding: 0 24px; background: #fff; border-bottom: 1px solid var(--line);
+  }
+  .logo { width: 26px; height: 26px; border-radius: 7px; background: var(--brand); display: grid; place-items: center; }
+  .logo svg { width: 26px; height: 26px; display: block; }
+  .ttl { font-weight: 600; letter-spacing: .3px; }
+  .ttl small { font-weight: 400; color: var(--muted); margin-left: 8px; font-family: var(--mono); font-size: 11px; }
+  .spacer { flex: 1; }
+  .stamp { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .btn {
+    height: 32px; padding: 0 14px; border-radius: 7px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink-2); font-size: 12.5px;
+  }
+  .btn:hover { border-color: var(--ink-2); }
+  .btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .btn-primary:hover { background: #0b5548; }
+
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 22px 24px 60px; }
+
+  /* KPI */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 15px 18px; }
+  .kpi .k { font-size: 11px; color: var(--muted); letter-spacing: .6px; }
+  .kpi .v { font-family: var(--mono); font-size: 26px; line-height: 1.25; margin-top: 4px; }
+  .kpi .v small { font-size: 12px; color: var(--muted); margin-left: 3px; }
+
+  /* 面板 */
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .panel-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 18px; border-bottom: 1px solid var(--line);
+  }
+  .panel-head h2 { margin: 0; font-size: 13.5px; font-weight: 600; }
+  .panel-head .count { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .search {
+    margin-left: auto; height: 32px; width: 220px; padding: 0 12px;
+    border: 1px solid var(--line); border-radius: 7px; font-size: 12.5px; outline: none;
+  }
+  .search:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(15,107,92,.12); }
+
+  /* 表格 */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; font-weight: 500; font-size: 11px; letter-spacing: .5px; color: var(--muted);
+    padding: 9px 14px; background: #fafbfc; border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--line-2); font-size: 12.5px; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: #f8fafc; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .dim { color: var(--muted); }
+  .bad { color: var(--bad); }
+  .ok { color: var(--good); }
+  .who { display: flex; align-items: center; gap: 9px; }
+  .avatar {
+    width: 26px; height: 26px; border-radius: 7px; background: #e8f0ed; color: var(--brand);
+    display: grid; place-items: center; font-family: var(--mono); font-size: 11px; font-weight: 600;
+  }
+  .who .code { font-family: var(--mono); font-size: 12px; }
+  .who .sub { font-size: 11px; color: var(--faint); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-family: var(--mono); }
+  .pill-live { background: #e6f4ee; color: var(--good); }
+  .pill-idle { background: #f3f4f6; color: var(--muted); }
+  .pill-cold { background: #fbeaea; color: var(--bad); }
+
+  .empty { padding: 60px 20px; text-align: center; color: var(--faint); }
+  .empty b { display: block; color: var(--ink-2); margin-bottom: 6px; font-size: 13.5px; }
+
+  /* 抽屉 */
+  .mask { position: fixed; inset: 0; background: rgba(17,24,39,.28); opacity: 0; pointer-events: none; transition: opacity .18s; z-index: 40; }
+  .mask.on { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 460px; max-width: 92vw;
+    background: #fff; border-left: 1px solid var(--line); z-index: 41;
+    transform: translateX(100%); transition: transform .2s ease;
+    display: flex; flex-direction: column;
+  }
+  .drawer.on { transform: none; }
+  .drawer-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .drawer-head h3 { margin: 0; font-size: 14px; }
+  .drawer-body { padding: 18px 20px 40px; overflow: auto; }
+  .kv { display: flex; padding: 8px 0; border-bottom: 1px solid var(--line-2); font-size: 12.5px; }
+  .kv span:first-child { color: var(--muted); width: 96px; flex-shrink: 0; }
+  .kv span:last-child { font-family: var(--mono); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 88px; margin: 14px 0 4px; }
+  .bars i { flex: 1; background: #d7e5e0; border-radius: 2px 2px 0 0; min-height: 2px; }
+  .bars i.on { background: var(--brand); }
+  .bars-x { display: flex; gap: 3px; font-family: var(--mono); font-size: 9px; color: var(--faint); }
+  .bars-x span { flex: 1; text-align: center; }
+  .copy { margin-left: auto; font-size: 11.5px; color: var(--brand); cursor: pointer; }
+
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .search { width: 140px; }
+    .hide-sm { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0f6b5c"/><rect x="12" y="17" width="34" height="37" rx="4" fill="#68a394" transform="rotate(-14 29 35)"/><rect x="15" y="13" width="34" height="39" rx="4" fill="#fafbf6" transform="rotate(-5 32 32)"/><circle cx="47" cy="17" r="8" fill="#b4472a" stroke="#0f6b5c" stroke-width="3"/></svg>
+  </div>
+  <div class="ttl">记忆卡片盒 <small>ADMIN</small></div>
+  <div class="spacer"></div>
+  <div class="stamp" id="stamp">—</div>
+  <button class="btn btn-primary" id="refresh">刷新</button>
+</div>
+
+<div class="wrap">
+  <div class="kpis">
+    <div class="kpi"><div class="k">用户（同步码）</div><div class="v" id="k-users">—</div></div>
+    <div class="kpi"><div class="k">今日活跃</div><div class="v" id="k-active">—</div></div>
+    <div class="kpi"><div class="k">累计已学词</div><div class="v" id="k-learned">—</div></div>
+    <div class="kpi"><div class="k">累计学习时长</div><div class="v" id="k-minutes">—</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>用户数据</h2>
+      <span class="count" id="count">—</span>
+      <input class="search" id="q" placeholder="搜索同步码" />
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>用户</th>
+          <th>已学</th>
+          <th>今日</th>
+          <th>待复习</th>
+          <th>连续</th>
+          <th class="hide-sm">累计时长</th>
+          <th class="hide-sm">正确率</th>
+          <th>最后同步</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>
+      <b>还没有用户数据</b>
+      在 App 的「设置 → 多设备同步」里生成同步码并启用后，这里就会出现。
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3 id="d-title">用户详情</h3>
+    <button class="btn" id="d-close" style="margin-left:auto">关闭</button>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+</div>
+
+<script>
+const API = "/english/admin/api";
+let USERS = [];
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function ago(ms) {
+  if (!ms) return "—";
+  const d = Date.now() - ms;
+  if (d < 60000) return "刚刚";
+  if (d < 3600000) return Math.floor(d / 60000) + " 分钟前";
+  if (d < 86400000) return Math.floor(d / 3600000) + " 小时前";
+  if (d < 30 * 86400000) return Math.floor(d / 86400000) + " 天前";
+  return new Date(ms).toLocaleDateString("zh-CN");
+}
+
+function freshness(ms) {
+  if (!ms) return ["pill-idle", "无数据"];
+  const d = Date.now() - ms;
+  if (d < 10 * 60000) return ["pill-live", "在线"];
+  if (d < 86400000) return ["pill-idle", "今天"];
+  if (d < 7 * 86400000) return ["pill-idle", Math.floor(d / 86400000) + " 天"];
+  return ["pill-cold", "沉默"];
+}
+
+function initials(code) {
+  // 用同步码末尾两位，避免都以 demo 开头时撞车
+  return code.slice(-2).toUpperCase();
+}
+
+function render() {
+  const q = $("#q").value.trim().toLowerCase();
+  const list = USERS.filter((u) => !q || u.code.includes(q));
+  const tb = $("#rows");
+  tb.innerHTML = list
+    .map((u) => {
+      const [cls, label] = freshness(u.updatedAt);
+      const dueCls = u.due > 0 ? "bad" : "ok";
+      return `<tr data-code="${esc(u.code)}">
+        <td><div class="who"><div class="avatar">${esc(initials(u.code))}</div>
+          <div><div class="code">${esc(u.code)}</div>
+          <div class="sub">${u.activeDays} 天有记录 · ${u.deck === "all" ? "全部词库" : "词库 " + esc(u.deck)}</div></div>
+        </div></td>
+        <td class="num">${u.learned}</td>
+        <td class="num ${u.todayNew >= u.goal ? "ok" : "dim"}">${u.todayNew}/${u.goal}<span class="dim"> · ${u.todayMin}分</span></td>
+        <td class="num ${dueCls}">${u.due}</td>
+        <td class="num">${u.streak} 天</td>
+        <td class="num hide-sm">${u.minutes} 分</td>
+        <td class="num hide-sm">${u.accuracy}%</td>
+        <td><span class="pill ${cls}">${label}</span></td>
+      </tr>`;
+    })
+    .join("");
+  $("#count").textContent = list.length + " / " + USERS.length;
+  $("#empty").hidden = USERS.length > 0;
+}
+
+function kpis() {
+  const active = USERS.filter((u) => Date.now() - u.updatedAt < 86400000).length;
+  const learned = USERS.reduce((a, u) => a + u.learned, 0);
+  const minutes = USERS.reduce((a, u) => a + u.minutes, 0);
+  $("#k-users").textContent = USERS.length;
+  $("#k-active").textContent = active;
+  $("#k-learned").textContent = learned;
+  $("#k-minutes").innerHTML = minutes + "<small>分</small>";
+}
+
+async function load() {
+  $("#stamp").textContent = "加载中…";
+  try {
+    const r = await fetch(API + "/users", { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 401) {
+      $("#stamp").textContent = "未登录";
+      $("#empty").hidden = false;
+      $("#empty").innerHTML = '<b>需要登录</b>请刷新页面重新输入账号密码。<br><button class="btn" style="margin-top:12px" onclick="location.reload()">重新登录</button>';
+      return;
+    }
+    const j = await r.json();
+    USERS = j.users || [];
+    kpis();
+    render();
+    const t = new Date();
+    $("#stamp").textContent = "更新于 " + String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0") + ":" + String(t.getSeconds()).padStart(2, "0");
+  } catch (e) {
+    $("#stamp").textContent = "加载失败";
+    $("#empty").hidden = false;
+    $("#empty").innerHTML = '<b>连不上接口</b>检查网络，或确认 english-sync 服务在跑。<br><button class="btn" style="margin-top:12px" onclick="load()">重试</button>';
+  }
+}
+
+async function openDetail(code) {
+  $("#d-title").textContent = code.slice(0, 8) + "…";
+  $("#d-body").innerHTML = '<div class="empty">加载中…</div>';
+  $("#mask").classList.add("on");
+  $("#drawer").classList.add("on");
+  try {
+    const r = await fetch(API + "/user?code=" + encodeURIComponent(code), { cache: "no-store" });
+    const u = await r.json();
+    renderDetail(u);
+  } catch (e) {
+    $("#d-body").innerHTML = '<div class="empty">加载失败</div>';
+  }
+}
+
+function renderDetail(u) {
+  const max = Math.max.apply(null, u.days.map((d) => d.cards).concat([1]));
+  const bars = u.days
+    .map((d) => `<i class="${d.cards ? "on" : ""}" style="height:${Math.max(2, (d.cards / max) * 100)}%" title="${d.day} · ${d.cards} 张"></i>`)
+    .join("");
+  const xs = u.days.map((d, i) => (i % 5 === 0 ? `<span>${d.day.slice(8)}</span>` : "<span></span>")).join("");
+
+  $("#d-body").innerHTML = `
+    <div class="kv"><span>同步码</span><span>${esc(u.code)}<span class="copy" data-copy="${esc(u.code)}">复制</span></span></div>
+    <div class="kv"><span>已学词</span><span>${u.learned}</span></div>
+    <div class="kv"><span>待复习</span><span class="${u.due ? "bad" : "ok"}">${u.due}</span></div>
+    <div class="kv"><span>今日</span><span>新词 ${u.todayNew}/${u.goal} · ${u.todayMin} 分</span></div>
+    <div class="kv"><span>连续 / 最长</span><span>${u.streak} / ${u.best} 天</span></div>
+    <div class="kv"><span>累计</span><span>${u.cards} 张 · ${u.minutes} 分 · ${u.newWords} 新词</span></div>
+    <div class="kv"><span>正确率</span><span>${u.accuracy}%</span></div>
+    <div class="kv"><span>活跃天数</span><span>${u.activeDays}</span></div>
+    <div class="kv"><span>最后活跃</span><span>${esc(u.lastActive || "—")}</span></div>
+    <div class="kv"><span>最后同步</span><span>${ago(u.updatedAt)}</span></div>
+    <div class="kv"><span>数据大小</span><span>${(u.bytes / 1024).toFixed(1)} KB · rev ${u.rev}</span></div>
+    <h4 style="margin:22px 0 0;font-size:12.5px;color:#6b7280;font-weight:500">近 30 天卡片量</h4>
+    <div class="bars">${bars}</div>
+    <div class="bars-x">${xs}</div>
+  `;
+}
+
+$("#rows").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr[data-code]");
+  if (tr) openDetail(tr.dataset.code);
+});
+$("#mask").addEventListener("click", closeDetail);
+$("#d-close").addEventListener("click", closeDetail);
+function closeDetail() {
+  $("#mask").classList.remove("on");
+  $("#drawer").classList.remove("on");
+}
+document.addEventListener("click", (e) => {
+  const c = e.target.closest(".copy");
+  if (!c) return;
+  navigator.clipboard.writeText(c.dataset.copy).then(() => {
+    c.textContent = "已复制";
+    setTimeout(() => (c.textContent = "复制"), 1200);
+  });
+});
+$("#q").addEventListener("input", render);
+$("#refresh").addEventListener("click", load);
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>

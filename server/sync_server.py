@@ -4,6 +4,7 @@
 只做一件事：按「同步码」存取一份 JSON 状态，带版本号防覆盖。
 不存账号、不存密码，同步码本身即凭据。
 """
+import glob
 import json
 import os
 import re
@@ -43,6 +44,133 @@ def write_state(code, obj):
     os.replace(tmp, p)
 
 
+def _today():
+    return time.strftime("%Y-%m-%d")
+
+
+def _streak(daily, goal):
+    def ok(day):
+        d = daily.get(day) or {}
+        return (d.get("cards") or 0) >= max(5, goal)
+
+    n = 0
+    t = time.time()
+    for i in range(400):
+        day = time.strftime("%Y-%m-%d", time.localtime(t - i * 86400))
+        if ok(day):
+            n += 1
+        elif i > 0:
+            break
+    return n
+
+
+def user_summary(code, blob):
+    """把一个同步码的数据压成后台列表用的一行。"""
+    st = blob.get("state") or {}
+    prog = st.get("prog") or {}
+    daily = st.get("daily") or {}
+    st_set = st.get("set") or {}
+    meta = st.get("meta") or {}
+    now = time.time() * 1000
+    today = _today()
+    d = daily.get(today) or {}
+    goal = int(st_set.get("dailyNew") or 20)
+
+    due = 0
+    for v in prog.values():
+        if (v.get("due") or 0) <= now:
+            due += 1
+
+    cards = 0
+    sec = 0
+    neww = 0
+    correct = 0
+    for x in daily.values():
+        cards += x.get("cards") or 0
+        sec += x.get("sec") or 0
+        neww += x.get("newW") or 0
+        correct += x.get("correct") or 0
+
+    days = [k for k, v in daily.items() if (v.get("cards") or 0) > 0]
+
+    return {
+        "code": code,
+        "short": code[:8],
+        "learned": len(prog),
+        "due": due,
+        "todayNew": int(d.get("newW") or 0),
+        "goal": goal,
+        "todayCards": int(d.get("cards") or 0),
+        "todayMin": round((d.get("sec") or 0) / 60.0),
+        "cards": cards,
+        "minutes": round(sec / 60.0),
+        "newWords": neww,
+        "accuracy": round((correct / cards) * 100) if cards else 0,
+        "streak": _streak(daily, goal),
+        "best": int(meta.get("bestStreak") or 0),
+        "activeDays": len(days),
+        "deck": st_set.get("deck") or "all",
+        "lastActive": meta.get("lastActive") or "",
+        "updatedAt": blob.get("updatedAt") or 0,
+        "rev": blob.get("rev") or 0,
+        "bytes": len(json.dumps(blob, ensure_ascii=False)),
+    }
+
+
+def user_detail(code, blob):
+    row = user_summary(code, blob)
+    st = blob.get("state") or {}
+    daily = st.get("daily") or {}
+    days = []
+    for i in range(29, -1, -1):
+        k = time.strftime("%Y-%m-%d", time.localtime(time.time() - i * 86400))
+        x = daily.get(k) or {}
+        days.append(
+            {
+                "day": k,
+                "cards": int(x.get("cards") or 0),
+                "newW": int(x.get("newW") or 0),
+                "reviews": int(x.get("reviews") or 0),
+                "min": round((x.get("sec") or 0) / 60.0),
+                "correct": int(x.get("correct") or 0),
+            }
+        )
+    row["days"] = days
+    row["totalWords"] = int((st.get("set") or {}).get("dailyNew") or 20)
+    return row
+
+
+def admin_users():
+    out = []
+    for p in glob.glob(os.path.join(ROOT, "*.json")):
+        code = os.path.basename(p)[:-5]
+        if not CODE_RE.match(code):
+            continue
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                blob = json.load(f)
+        except Exception:
+            continue
+        try:
+            out.append(user_summary(code, blob))
+        except Exception:
+            continue
+    out.sort(key=lambda x: x.get("updatedAt") or 0, reverse=True)
+    return out
+
+
+def admin_user(code):
+    p = path_for(code)
+    if not CODE_RE.match(code) or not os.path.exists(p):
+        return None
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            blob = json.load(f)
+        return user_detail(code, blob)
+    except Exception:
+        return None
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "eyc-sync/1"
     protocol_version = "HTTP/1.1"
@@ -66,6 +194,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if "ping" in self.path:
             return self._send(200, {"ok": True, "service": "eyc-sync", "time": int(time.time() * 1000)})
+        if "/admin/api/" in self.path:
+            return self.admin_get()
         code = self._code()
         if not CODE_RE.match(code):
             return self._send(400, {"error": "bad code"})
@@ -77,6 +207,23 @@ class Handler(BaseHTTPRequestHandler):
         if data is None:
             return self._send(404, {"error": "empty"})
         return self._send(200, data)
+
+    def admin_get(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        q = parse_qs(parsed.query)
+        if path.endswith("/users"):
+            with LOCK:
+                data = admin_users()
+            return self._send(200, {"users": data, "serverTime": int(time.time() * 1000)})
+        if path.endswith("/user"):
+            code = ((q.get("code") or [""])[0] or "").strip().lower()
+            with LOCK:
+                data = admin_user(code)
+            if not data:
+                return self._send(404, {"error": "not found"})
+            return self._send(200, data)
+        return self._send(404, {"error": "unknown"})
 
     def do_PUT(self):
         code = self._code()
