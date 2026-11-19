@@ -107,6 +107,7 @@ const DECKS = [
 let total = 0;
 let totalBytes = 0;
 const all = new Set();
+const wordMap = {};
 
 for (const d of DECKS) {
   const words = readTxt(d.txt);
@@ -132,6 +133,10 @@ for (const d of DECKS) {
   total += ordered.length;
   totalBytes += bytes;
   ordered.forEach((r) => all.add(r[0].toLowerCase()));
+  ordered.forEach((r) => {
+    const id = r[0].toLowerCase();
+    if (!wordMap[id]) wordMap[id] = { p: r[1], c: r[2] };
+  });
 
   console.log(
     d.name.padEnd(3),
@@ -145,3 +150,8 @@ for (const d of DECKS) {
 console.log("\n合计词条（含跨库重复）:", total);
 console.log("合计去重后:", all.size);
 console.log("三个 deck 合计体积:", (totalBytes / 1024 / 1024).toFixed(2), "MB");
+
+/* 词义表：给服务器上的学习报告脚本用（大肥鱼考单词时查答案） */
+const wj = JSON.stringify(wordMap);
+fs.writeFileSync(P(path.join("..", "server", "words.json")), wj, "utf8");
+console.log("词义表 server/words.json:", (Buffer.byteLength(wj) / 1024).toFixed(0), "KB，", Object.keys(wordMap).length, "词");
