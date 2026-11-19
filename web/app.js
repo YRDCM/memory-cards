@@ -946,7 +946,7 @@
   function mapSVG() {
     const narrow = isNarrow();
     const W = narrow ? 360 : 880;
-    const H = narrow ? 214 : 246;
+    const H = narrow ? 196 : 186;
     const padL = narrow ? 34 : 44;
     const padR = narrow ? 8 : 16;
     const padT = narrow ? 8 : 16;

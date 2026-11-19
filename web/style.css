@@ -222,7 +222,7 @@ textarea {
 .shell {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 26px 26px 90px;
+  padding: 20px 26px 24px;
 }
 
 .view {
@@ -274,8 +274,8 @@ textarea {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: linear-gradient(180deg, #fdfdf8, var(--surface));
@@ -402,7 +402,7 @@ textarea {
 /* ---------- 遗忘地图 ---------- */
 
 .map-panel {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   overflow: hidden;
 }
 
@@ -410,7 +410,7 @@ textarea {
   display: flex;
   align-items: flex-end;
   gap: 18px;
-  padding: 18px 22px 2px;
+  padding: 14px 22px 2px;
   flex-wrap: wrap;
 }
 
@@ -474,7 +474,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 4px 22px 16px;
+  padding: 4px 22px 12px;
   font-size: 12px;
   color: var(--muted);
   flex-wrap: wrap;
@@ -499,25 +499,25 @@ textarea {
 .today-grid {
   display: grid;
   grid-template-columns: 1.05fr 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
   align-items: stretch;
 }
 
 .today-main {
-  padding: 18px 20px 20px;
+  padding: 16px 18px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .ring-row {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
 }
 .ring {
   position: relative;
-  width: 106px;
+  width: 92px;
   height: 106px;
   flex: 0 0 auto;
 }
