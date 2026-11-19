@@ -14,6 +14,12 @@ Page({
   },
 
   onShow() {
+    /* 兜底：万一 tabBar 被意外隐藏，回到本页时强制恢复 */
+    if (wx.showTabBar) {
+      try {
+        wx.showTabBar({ animation: false });
+      } catch (e) {}
+    }
     this.rebuild();
   },
 
