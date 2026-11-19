@@ -514,8 +514,8 @@
     }
   }
 
-  /* ========== 发音（统一走在线音频，不依赖系统语音） ========== */
-  const SPEAK_BASE = "https://dict.youdao.com/dictvoice?type=2&audio=";
+  /* ========== 发音（统一走自己的转接接口，不直接连第三方） ========== */
+  const SPEAK_BASE = "/english/api/audio?w=";
   let audioEl = null;
   let lastErrAt = 0;
 

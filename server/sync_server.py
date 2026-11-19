@@ -11,13 +11,16 @@ import re
 import sys
 import threading
 import time
+import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote
 
 ROOT = os.environ.get("EYC_DATA", "/opt/english-coach/data")
+AUDIO_DIR = os.path.join(os.path.dirname(ROOT.rstrip("/")), "audio")
 PORT = int(os.environ.get("EYC_PORT", "8093"))
 CODE_RE = re.compile(r"^[a-z0-9]{16,64}$")
+WORD_RE = re.compile(r"^[A-Za-z][A-Za-z' \-]{0,59}$")
 MAX_BODY = 4 * 1024 * 1024
 LOCK = threading.Lock()
 
@@ -196,6 +199,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True, "service": "eyc-sync", "time": int(time.time() * 1000)})
         if "/admin/api/" in self.path:
             return self.admin_get()
+        parsed0 = urlparse(self.path)
+        if parsed0.path.endswith("/audio"):
+            return self.audio(parse_qs(parsed0.query))
         code = self._code()
         if not CODE_RE.match(code):
             return self._send(400, {"error": "bad code"})
@@ -207,6 +213,50 @@ class Handler(BaseHTTPRequestHandler):
         if data is None:
             return self._send(404, {"error": "empty"})
         return self._send(200, data)
+
+    def _send_audio(self, data):
+        self.send_response(200)
+        self.send_header("Content-Type", "audio/mpeg")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "public, max-age=2592000")
+        self.end_headers()
+        try:
+            self.wfile.write(data)
+        except Exception:
+            pass
+
+    def audio(self, q):
+        """单词发音：代理 + 落盘缓存，客户端不用碰第三方域名"""
+        word = ((q.get("w") or [""])[0] or "").strip()
+        if not WORD_RE.match(word):
+            return self._send(400, {"error": "bad word"})
+        key = re.sub(r"[^a-z0-9]", "", word.lower()) or "x"
+        try:
+            os.makedirs(AUDIO_DIR, exist_ok=True)
+        except Exception:
+            pass
+        fn = os.path.join(AUDIO_DIR, key + ".mp3")
+        try:
+            if os.path.exists(fn) and os.path.getsize(fn) > 512:
+                with open(fn, "rb") as f:
+                    return self._send_audio(f.read())
+        except Exception:
+            pass
+        try:
+            url = "https://dict.youdao.com/dictvoice?type=2&audio=" + quote(word)
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=6) as r:
+                data = r.read()
+        except Exception:
+            return self._send(502, {"error": "tts failed"})
+        if not data or len(data) < 512:
+            return self._send(404, {"error": "no audio"})
+        try:
+            with open(fn, "wb") as f:
+                f.write(data)
+        except Exception:
+            pass
+        return self._send_audio(data)
 
     def admin_get(self):
         parsed = urlparse(self.path)
