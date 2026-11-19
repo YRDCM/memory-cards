@@ -8,6 +8,11 @@
   const DAY = 86400000;
   const KEY = "eyc_v1";
   const BUILD = "__BUILD__";
+  const ICON_SPEAKER =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/>' +
+    '<path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = (s) =>
@@ -1294,8 +1299,7 @@
     if (session.stage === "spell") {
       body =
         '<div class="fc-main">' +
-        '<div><button class="speak" data-act="speak" data-text="' + esc(w.w) + '">🔊 听发音</button></div>' +
-        '<div class="fc-meaning" style="margin-top:26px">' + esc(w.cn) + "</div>" +
+        '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         '<div class="fc-pos">' + esc(w.pos) + " · 根据释义拼出这个单词</div>" +
         '<div class="spell-box"><input class="spell-input" id="spell" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="在这里拼写"></div>' +
         "</div>" +
@@ -1361,7 +1365,6 @@
         '<div class="fc-meaning pending">先在心里回想它的意思，再翻开</div>' +
         "</div>" +
         '<div class="fc-actions">' +
-        '<button class="speak" data-act="speak" data-text="' + esc(w.w) + '">🔊 听发音</button>' +
         '<button class="btn btn-primary btn-lg" data-act="flip">显示释义</button>' +
         '<span class="hint">空格翻开 · 1/2/3 评分</span></div>';
     } else {
@@ -1389,7 +1392,15 @@
       '<div class="study-progress"><i style="width:' + pct + '%"></i></div>' +
       '<button class="close" data-act="end">结束本轮</button></div>' +
       '<div class="flashcard" id="card">' +
+      '<div class="fc-head">' +
       '<div class="fc-tab">' + (isNew ? "NEW" : "REVIEW") + "</div>" +
+      /* 填空和拼写要「产出」这个单词，这两档给发音按钮等于送答案 */
+      (session.stage === "cloze" || session.stage === "spell"
+        ? ""
+        : '<button class="fc-say" data-act="speak" data-text="' + esc(w.w) + '" aria-label="听发音" title="听发音">' +
+          ICON_SPEAKER +
+          "</button>") +
+      "</div>" +
       body +
       "</div></div>"
     );

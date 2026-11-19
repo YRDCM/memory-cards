@@ -13,7 +13,11 @@
 
   <!-- 卡片 -->
   <view class="flashcard">
-    <view class="tab tiny">{{isNew ? 'NEW' : 'REVIEW'}}</view>
+    <view class="fc-head">
+      <view class="tab tiny">{{isNew ? 'NEW' : 'REVIEW'}}</view>
+      <!-- 填空和拼写要产出这个单词，这两档不给发音按钮 -->
+      <view wx:if="{{ttsOk && stage !== 'cloze' && stage !== 'spell'}}" class="fc-say" bindtap="onSpeak" hover-class="fc-say-hover">🔊</view>
+    </view>
 
     <!-- 拼写模式 -->
     <block wx:if="{{stage === 'spell'}}">
@@ -116,10 +120,7 @@
         <view class="hint">先在心里回想它的意思，再翻开</view>
       </view>
       <view class="fc-foot">
-        <view class="foot-row">
-          <view wx:if="{{ttsOk}}" class="btn btn-sm speak" bindtap="onSpeak">🔊 发音</view>
-          <view class="btn btn-primary grow-btn" bindtap="onFlip">显示释义</view>
-        </view>
+        <view class="btn btn-primary" bindtap="onFlip">显示释义</view>
       </view>
     </block>
 

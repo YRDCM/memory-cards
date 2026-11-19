@@ -847,14 +847,49 @@ textarea {
   display: flex;
   flex-direction: column;
 }
-.fc-tab {
+.fc-head {
   position: absolute;
-  top: 16px;
-  right: 18px;
+  top: 14px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 2;
+}
+.fc-tab {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   color: var(--muted);
+}
+.fc-say {
+  pointer-events: auto;
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px -6px 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease,
+    transform 0.1s ease;
+}
+.fc-say svg {
+  width: 17px;
+  height: 17px;
+}
+.fc-say:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+.fc-say:active {
+  transform: scale(0.92);
 }
 .fc-main {
   flex: 1;
