@@ -80,6 +80,7 @@ const variants = {
   first: "",
   study: `document.querySelector('[data-act=start]').click();
     setTimeout(function(){var b=document.querySelector('[data-act=flip]');if(b)b.click();},250);`,
+  "study-front": `document.querySelector('[data-act=start]').click();`,
   words: `document.querySelector('[data-act=go][data-view=words]').click();`,
   stats: `document.querySelector('[data-act=go][data-view=stats]').click();`,
   settings: `document.querySelector('[data-act=go][data-view=settings]').click();`,

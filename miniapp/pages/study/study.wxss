@@ -28,13 +28,27 @@
 
 .flashcard {
   position: relative;
+  display: flex;
+  flex-direction: column;
   background: #fafbf6;
   border: 1rpx solid #d6dbd0;
   border-radius: 24rpx;
   padding: 56rpx 44rpx 40rpx 64rpx;
-  min-height: 620rpx;
+  min-height: 500rpx;
   box-sizing: border-box;
   box-shadow: 0 12rpx 30rpx -18rpx rgba(22, 38, 43, 0.5);
+}
+
+.fc-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.fc-foot {
+  margin-top: 32rpx;
 }
 
 .flashcard::before {
@@ -113,7 +127,7 @@
 
 .grades {
   display: flex;
-  margin-top: 44rpx;
+  margin-top: 36rpx;
 }
 
 .grade {
@@ -156,7 +170,7 @@
   border-bottom: 3rpx solid #d6dbd0;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 56rpx;
-  margin: 40rpx 0 48rpx;
+  margin: 36rpx 0 0;
   padding: 0 4rpx;
 }
 

@@ -1053,14 +1053,14 @@
     } else if (!session.revealed) {
       body =
         '<div class="fc-main">' +
-        '<div><button class="speak" data-act="speak" data-text="' + esc(w.w) + '">🔊 听发音</button></div>' +
-        '<div class="fc-word" style="margin-top:22px">' + esc(w.w) + "</div>" +
-        '<div class="fc-pos">' + esc(w.pos) + (isNew ? " · 新词" : " · 第 " + ((p && p.r) || 0) + " 次复习") + "</div>" +
+        '<div class="fc-word">' + esc(w.w) + "</div>" +
+        '<div class="fc-pos">' + esc(w.pos) + "</div>" +
         '<div class="fc-meaning pending">先在心里回想它的意思，再翻开</div>' +
         "</div>" +
         '<div class="fc-actions">' +
-        '<button class="btn btn-primary btn-lg" data-act="flip">显示释义（空格）</button>' +
-        '<span class="hint">1 忘了 · 2 模糊 · 3 会了</span></div>';
+        '<button class="speak" data-act="speak" data-text="' + esc(w.w) + '">🔊 听发音</button>' +
+        '<button class="btn btn-primary btn-lg" data-act="flip">显示释义</button>' +
+        '<span class="hint">空格翻开 · 1/2/3 评分</span></div>';
     } else {
       const n1 = nextInterval(p, 1);
       const n2 = nextInterval(p, 2);
