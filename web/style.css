@@ -1643,6 +1643,21 @@ button,
   .study {
     max-width: 100%;
   }
+
+  /* 学习页：底部 tab 已隐藏，卡片撑满剩余高度，不留大片空白 */
+  .shell.is-study {
+    display: flex;
+    flex-direction: column;
+  }
+  .shell.is-study .study {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .shell.is-study .flashcard {
+    flex: 1 1 auto;
+  }
   .study-top {
     font-size: 12.5px;
     gap: 10px;

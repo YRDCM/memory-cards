@@ -1653,8 +1653,8 @@
       '<button class="timer-btn" data-act="timer-toggle" aria-label="开始或暂停计时">' +
       (timer.running ? "❚❚" : "▶") + "</button></div>" +
       "</div></div></header>" +
-      '<div class="shell">' + (storageOK ? "" : warnBar()) + body + "</div>" +
-      '<nav class="tabbar">' + tabs + "</nav>" +
+      '<div class="shell' + (v === "study" ? " is-study" : "") + '">' + (storageOK ? "" : warnBar()) + body + "</div>" +
+      (v === "study" ? "" : '<nav class="tabbar">' + tabs + "</nav>") +
       '<div class="toast-wrap" id="toasts"></div>';
 
     document.title =
