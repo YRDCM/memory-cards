@@ -42,6 +42,49 @@
       </view>
     </block>
 
+    <!-- 选择题 -->
+    <block wx:elif="{{stage === 'choice'}}">
+      <view class="fc-body">
+        <view class="quiz-tag">{{quizTag}}</view>
+        <view class="word">{{word}}</view>
+        <view class="pos">{{pos}}</view>
+      </view>
+      <view class="options">
+        <view class="opt" wx:for="{{options}}" wx:key="index" data-i="{{index}}" bindtap="onPick">
+          <text class="opt-key">{{keys[index]}}</text>
+          <text class="opt-txt">{{item}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 例句填空 -->
+    <block wx:elif="{{stage === 'cloze'}}">
+      <view class="fc-body">
+        <view class="quiz-tag">{{quizTag}}</view>
+        <view class="cloze-sentence">{{cloze.sentence}}</view>
+        <view class="meaning">{{hintCn}}</view>
+        <input class="spell-input" value="{{input}}" bindinput="onInput" focus="{{true}}"
+               placeholder="拼出这个单词" placeholder-class="ph" confirm-type="done" bindconfirm="onClozeCheck" />
+      </view>
+      <view class="fc-foot">
+        <view class="btn btn-primary btn-block" bindtap="onClozeCheck">检查</view>
+      </view>
+    </block>
+
+    <!-- 答题结果 -->
+    <block wx:elif="{{stage === 'quizResult'}}">
+      <view class="fc-body">
+        <view class="word {{lastOk ? 'ok' : 'bad'}}">{{word}}</view>
+        <view class="pos">{{pos}} · {{lastOk ? '✓ 答对了' : '✗ 没答对'}}</view>
+        <view class="meaning">{{cn}}</view>
+        <view wx:if="{{ex}}" class="ex">{{ex}}</view>
+        <view wx:if="{{excn}}" class="excn">{{excn}}</view>
+      </view>
+      <view class="fc-foot">
+        <view class="btn btn-primary btn-block" bindtap="onQuizNext">继续</view>
+      </view>
+    </block>
+
     <!-- 正面 -->
     <block wx:elif="{{!revealed}}">
       <view class="fc-body">

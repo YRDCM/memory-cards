@@ -29,6 +29,16 @@
       <switch checked="{{spelling}}" bindchange="onSpell" color="#0f6b5c" />
     </view>
 
+    <picker mode="selector" range="{{quizLabels}}" value="{{quizIndex}}" bindchange="onQuiz">
+      <view class="setrow">
+        <view class="grow">
+          <view class="label">复习题型</view>
+          <view class="desc">新词永远先看卡片学会；复习时按这里出题。</view>
+        </view>
+        <view class="val mono">{{quizLabels[quizIndex]}}</view>
+      </view>
+    </picker>
+
     <picker mode="selector" range="{{deckLabels}}" value="{{deckIndex}}" bindchange="onDeck">
       <view class="setrow last">
         <view class="grow">

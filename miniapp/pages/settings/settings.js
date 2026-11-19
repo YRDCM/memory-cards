@@ -27,6 +27,12 @@ const DECKS = [
 
 const NEW_OPTS = [10, 15, 20, 25, 30, 40];
 const TARGET_OPTS = [15, 25, 35, 45, 60];
+const QUIZ_OPTS = [
+  { key: "card", label: "卡片自评" },
+  { key: "choice", label: "选择题" },
+  { key: "cloze", label: "例句填空" },
+  { key: "mixed", label: "混合" },
+];
 
 Page({
   data: {
@@ -36,6 +42,8 @@ Page({
     newIndex: 2,
     targetLabels: TARGET_OPTS.map((n) => n + " 分钟"),
     targetIndex: 1,
+    quizLabels: QUIZ_OPTS.map((q) => q.label),
+    quizIndex: 0,
     spelling: false,
     syncCode: "",
     syncStatus: "",
@@ -60,11 +68,16 @@ Page({
     }
     const ni = Math.max(0, NEW_OPTS.indexOf(S.set.dailyNew));
     const ti = Math.max(0, TARGET_OPTS.indexOf(S.set.targetMin));
+    let qi = 0;
+    for (let i = 0; i < QUIZ_OPTS.length; i++) {
+      if (QUIZ_OPTS[i].key === S.set.quiz) qi = i;
+    }
     const synced = !!S.set.syncCode && !!S.sync.at && !S.sync.err;
     this.setData({
       deckIndex: di,
       newIndex: ni,
       targetIndex: ti,
+      quizIndex: qi,
       spelling: !!S.set.spelling,
       syncCode: S.set.syncCode || "",
       syncStatus: sync.statusText(),
@@ -105,6 +118,14 @@ Page({
     S.set.spelling = e.detail.value;
     store.save();
     this.setData({ spelling: e.detail.value });
+  },
+
+  onQuiz(e) {
+    const i = Number(e.detail.value);
+    const S = store.state();
+    S.set.quiz = QUIZ_OPTS[i].key;
+    store.save();
+    this.setData({ quizIndex: i });
   },
 
   onCodeInput(e) {

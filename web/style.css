@@ -1013,6 +1013,61 @@ textarea {
   color: var(--warn);
 }
 
+/* ---------- 复习题型 ---------- */
+
+.fc-quiz-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.fc-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  min-height: 62px;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.opt:hover {
+  border-color: var(--accent);
+  background: var(--soft);
+}
+.opt-key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+.opt-txt {
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.fc-cloze {
+  font-family: var(--font-display);
+  font-size: 23px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
 /* ---------- 统计 ---------- */
 
 .stat-grid {
@@ -1568,6 +1623,13 @@ button,
   .grade-row {
     gap: 7px;
     margin-top: 18px;
+  }
+  .fc-options {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .fc-cloze {
+    font-size: 19px;
   }
   .grade {
     padding: 13px 2px;

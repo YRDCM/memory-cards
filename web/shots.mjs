@@ -84,6 +84,18 @@ const seedSynced =
   JSON.stringify(JSON.stringify(syncedState)) +
   ")}catch(e){}</script>";
 
+/* 复习题型：dailyNew 设 0，保证第一张就是复习词 */
+function quizSeed(mode) {
+  const s = JSON.parse(JSON.stringify(state));
+  s.set.quiz = mode;
+  s.set.dailyNew = 0;
+  return (
+    "<script>try{localStorage.setItem('eyc_v1'," +
+    JSON.stringify(JSON.stringify(s)) +
+    ")}catch(e){}</script>"
+  );
+}
+
 const variants = {
   today: "",
   first: "",
@@ -94,6 +106,8 @@ const variants = {
   stats: `document.querySelector('[data-act=go][data-view=stats]').click();`,
   settings: `document.querySelector('[data-act=go][data-view=settings]').click();`,
   "settings-locked": `document.querySelector('[data-act=go][data-view=settings]').click();`,
+  "quiz-choice": `document.querySelector('[data-act=start]').click();`,
+  "quiz-cloze": `document.querySelector('[data-act=start]').click();`,
   spell: `document.querySelector('[data-act=start]').click();`,
   flow: `
     var out = [];
@@ -134,21 +148,18 @@ const variants = {
     }, 600);`,
 };
 
-const noSeed = new Set(["first"]);
-const spellSeed = new Set(["spell"]);
-const syncedSeed = new Set(["settings-locked"]);
+const seeds = {
+  first: "<script>try{localStorage.clear()}catch(e){}</script>",
+  spell: seedSpell,
+  "settings-locked": seedSynced,
+  "quiz-choice": quizSeed("choice"),
+  "quiz-cloze": quizSeed("cloze"),
+};
 
 let n = 0;
 for (const [name, act] of Object.entries(variants)) {
   const tail = `<script>setTimeout(function(){${act}},80);</script>`;
-  const seedHtml = noSeed.has(name)
-    ? "<script>try{localStorage.clear()}catch(e){}</script>"
-    : syncedSeed.has(name)
-    ? seedSynced
-    : spellSeed.has(name)
-    ? seedSpell
-    : seed;
-  let out = html.replace("<body>", "<body>\n" + seedHtml);
+  let out = html.replace("<body>", "<body>\n" + (seeds[name] || seed));
   out = out.replace("</body>", tail + "\n</body>");
   fs.writeFileSync(path.join(here, "_t-" + name + ".html"), out, "utf8");
   n++;

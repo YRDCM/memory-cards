@@ -9,6 +9,7 @@ const DEFAULT_SET = {
   reminder: "20:30",
   spelling: false,
   deck: "all",
+  quiz: "card",
   syncCode: "",
   syncOn: true,
 };

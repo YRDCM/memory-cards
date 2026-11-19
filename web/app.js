@@ -55,6 +55,7 @@
     spelling: false,
     rate: 0.9,
     deck: "all",
+    quiz: "card",
     syncCode: "",
     syncOn: true,
   };
@@ -169,9 +170,11 @@
 
   let ALL = [];
   let MAP = new Map();
+  let optPool = null;
   function rebuildWords() {
     ALL = buildAll();
     MAP = new Map(ALL.map((w) => [w.id, w]));
+    optPool = null;
   }
   rebuildWords();
 
@@ -671,9 +674,115 @@
     if (!session) return;
     const w = currentWord();
     if (!w) return;
+    const p = progOf(w.id);
     session.revealed = false;
     session.spellResult = null;
-    session.stage = S.set.spelling && progOf(w.id) ? "spell" : "front";
+    const mode = pickMode(w, !p);
+    session.mode = mode;
+    session.stage = mode;
+    session.picked = -1;
+    session.lastOk = false;
+    if (mode === "choice") {
+      const o = buildOptions(w);
+      session.options = o.options;
+      session.correctIdx = o.correct;
+    } else if (mode === "cloze") {
+      session.cloze = buildCloze(w);
+      session.input = "";
+    }
+  }
+
+  /* 题型选择：新词永远先看卡片，复习词才上题 */
+  function pickMode(w, isNew) {
+    const q = S.set.quiz || "card";
+    if (isNew) return q === "card" ? "card" : "card";
+    if (q === "card") return S.set.spelling ? "spell" : "card";
+    const canCloze = !!(w.ex && findForm(w.ex, w.w));
+    if (q === "choice") return "choice";
+    if (q === "cloze") return canCloze ? "cloze" : "choice";
+    /* 混合：卡片 / 选择 / 填空 轮着来 */
+    const r = Math.random();
+    if (r < 0.3) return S.set.spelling ? "spell" : "card";
+    if (r < 0.65) return "choice";
+    return canCloze ? "cloze" : "choice";
+  }
+
+  /* 在例句里找出目标词的实际形态（含变形） */
+  function findForm(sentence, word) {
+    const esc2 = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp("\\b" + esc2 + "(s|es|ed|d|ing|ies|ied)?\\b", "i");
+    const m = re.exec(sentence);
+    return m ? m[0] : null;
+  }
+
+  function shuffleIn(a) {
+    const b = a.slice();
+    for (let i = b.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = b[i];
+      b[i] = b[j];
+      b[j] = t;
+    }
+    return b;
+  }
+
+  /* 释义太长不适合做选项：去掉内嵌词性、只留前两个义项、16 字截断 */
+  function shortCn(cn) {
+    const clean = String(cn || "")
+      .replace(/\b(?:n|v|vt|vi|adj|adv|prep|conj|pron|num|art|int|aux|modal)\.\s*/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const parts = clean.split(/[；;]/).filter(function (x) {
+      return x.trim();
+    });
+    let s = parts.slice(0, 2).join("；");
+    if (s.length > 16) s = s.slice(0, 15) + "…";
+    return s || clean;
+  }
+
+  function optionPool() {
+    if (optPool) return optPool;
+    const seen = {};
+    const out = [];
+    for (let i = 0; i < ALL.length; i++) {
+      const x = ALL[i];
+      if (!x.cn) continue;
+      const s = shortCn(x.cn);
+      if (s.length < 2 || s.length > 17) continue;
+      if (!/[\u4e00-\u9fa5]/.test(s)) continue;
+      if (/^[\[\[]/.test(s)) continue;
+      if (seen[s]) continue;
+      seen[s] = 1;
+      out.push({ s: s, pos: x.pos, len: s.length, id: x.id });
+    }
+    optPool = out;
+    return out;
+  }
+
+  /* 四个选项：优先同词性、长度接近的干扰项 */
+  function buildOptions(w) {
+    const target = shortCn(w.cn);
+    const pool = optionPool().filter((x) => x.id !== w.id && x.s !== target);
+    const near = pool.filter((x) => x.pos === w.pos && Math.abs(x.len - target.length) <= 4);
+    const rest = pool.filter((x) => near.indexOf(x) < 0);
+    const picked = shuffleIn(near).concat(shuffleIn(rest)).slice(0, 3).map((x) => x.s);
+    const cn = [target].concat(picked);
+    const correct = Math.floor(Math.random() * cn.length);
+    const tmp = cn[0];
+    cn[0] = cn[correct];
+    cn[correct] = tmp;
+    return { options: cn, correct: correct };
+  }
+
+  /* 例句挖空 */
+  function buildCloze(w) {
+    const form = findForm(w.ex, w.w);
+    if (!form) return null;
+    return {
+      sentence: w.ex.replace(form, "＿＿＿＿"),
+      answer: form.toLowerCase(),
+      word: w.w,
+    };
   }
 
   function nextCard() {
@@ -1057,6 +1166,46 @@
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         "</div>" +
         '<div class="fc-actions"><button class="btn btn-primary btn-lg" data-act="next">继续（Enter）</button></div>';
+    } else if (session.stage === "choice") {
+      const opts = session.options || [];
+      body =
+        '<div class="fc-main">' +
+        '<div class="fc-quiz-tag">选出正确释义</div>' +
+        '<div class="fc-word">' + esc(w.w) + "</div>" +
+        '<div class="fc-pos">' + esc(w.pos) + "</div>" +
+        "</div>" +
+        '<div class="fc-options">' +
+        opts
+          .map(
+            (o, i) =>
+              '<button class="opt" data-act="pick" data-i="' + i + '">' +
+              '<span class="opt-key">' + "ABCD"[i] + "</span>" +
+              '<span class="opt-txt">' + esc(o) + "</span></button>"
+          )
+          .join("") +
+        "</div>";
+    } else if (session.stage === "cloze") {
+      const c = session.cloze || { sentence: "", answer: "" };
+      body =
+        '<div class="fc-main">' +
+        '<div class="fc-quiz-tag">填出空缺的单词</div>' +
+        '<div class="fc-cloze">' + esc(c.sentence) + "</div>" +
+        '<div class="fc-meaning">' + esc(shortCn(w.cn)) + "</div>" +
+        '<div class="spell-box"><input class="spell-input" id="cloze" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="拼出这个单词"></div>' +
+        "</div>" +
+        '<div class="fc-actions">' +
+        '<button class="btn btn-primary btn-lg" data-act="cloze-check">检查（Enter）</button>' +
+        '<span class="hint">想不出来就按 Esc</span></div>';
+    } else if (session.stage === "quizResult") {
+      const ok = session.lastOk;
+      body =
+        '<div class="fc-main">' +
+        '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" +
+        '<div class="fc-pos">' + esc(w.pos) + (ok ? " · ✓ 答对了" : " · ✗ 没答对") + "</div>" +
+        '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
+        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
+        "</div>" +
+        '<div class="fc-actions"><button class="btn btn-primary btn-lg" data-act="quiz-next">继续（Enter）</button></div>';
     } else if (!session.revealed) {
       body =
         '<div class="fc-main">' +
@@ -1247,6 +1396,15 @@
       '<div class="set-control"><button class="switch" role="switch" aria-checked="' +
       (S.set.spelling ? "true" : "false") + '" data-act="toggle-spell" aria-label="拼写测试"></button></div></div>' +
 
+      '<div class="set-row"><div><div class="set-label">复习题型</div>' +
+      '<div class="set-desc">新词永远先看卡片学会；复习时按这里出题。选择题最轻松，例句填空记得最牢。</div></div>' +
+      '<div class="set-control"><select class="field" data-set="quiz">' +
+      '<option value="card"' + (S.set.quiz === "card" ? " selected" : "") + ">卡片自评</option>" +
+      '<option value="choice"' + (S.set.quiz === "choice" ? " selected" : "") + ">选择题</option>" +
+      '<option value="cloze"' + (S.set.quiz === "cloze" ? " selected" : "") + ">例句填空</option>" +
+      '<option value="mixed"' + (S.set.quiz === "mixed" ? " selected" : "") + ">混合</option>" +
+      "</select></div></div>" +
+
       '<div class="set-row"><div><div class="set-label">词汇范围</div>' +
       '<div class="set-desc">「全部」按 初中 → 高中 → 四级 的顺序排，先学完初中再进高中。换范围不会丢进度。</div></div>' +
       '<div class="set-control"><select class="field" data-set="deck">' +
@@ -1347,7 +1505,7 @@
         ? "学习中 · 记忆卡片盒"
         : "(" + doneToday + "/" + S.set.dailyNew + ") 记忆卡片盒";
 
-    const sp = $("#spell");
+    const sp = $("#spell") || $("#cloze");
     if (sp) sp.focus();
   }
 
@@ -1402,6 +1560,34 @@
     }
     if (act === "speak") {
       speak(el.dataset.text);
+      return;
+    }
+    if (act === "pick") {
+      if (!session || session.stage !== "choice") return;
+      const i = Number(el.dataset.i);
+      session.picked = i;
+      session.lastOk = i === session.correctIdx;
+      session.stage = "quizResult";
+      render();
+      return;
+    }
+    if (act === "cloze-check") {
+      if (!session || session.stage !== "cloze") return;
+      const inp = $("#cloze");
+      const v = (inp ? inp.value : "").trim().toLowerCase();
+      if (!v) {
+        toast("先写点什么，或者按 Esc 看答案。", "warn");
+        return;
+      }
+      const c = session.cloze || {};
+      session.lastOk = v === c.answer || v === String(c.word || "").toLowerCase();
+      session.stage = "quizResult";
+      render();
+      return;
+    }
+    if (act === "quiz-next") {
+      if (!session || session.stage !== "quizResult") return;
+      answer(session.lastOk ? 3 : 1);
       return;
     }
     if (act === "grade") {
@@ -1571,6 +1757,22 @@
       return;
     }
 
+    if (typing && e.target.id === "cloze") {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const btn = $('[data-act="cloze-check"]');
+        if (btn) btn.click();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        if (session) {
+          session.lastOk = false;
+          session.stage = "quizResult";
+          render();
+        }
+      }
+      return;
+    }
+
     if (typing) return;
     if (!session || S.ui !== "study") return;
 
@@ -1594,6 +1796,10 @@
     if (e.key === "Enter" && session.stage === "spellResult") {
       e.preventDefault();
       answer(session.spellResult ? 3 : 1);
+    }
+    if (e.key === "Enter" && session.stage === "quizResult") {
+      e.preventDefault();
+      answer(session.lastOk ? 3 : 1);
     }
   });
 
