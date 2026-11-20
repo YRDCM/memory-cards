@@ -305,7 +305,9 @@
       p.r += 1;
     } else {
       p.e = clamp(p.e + 0.1, 1.3, 3.0);
-      p.i = p.i === 0 ? 1 : Math.min(p.i * p.e, 200);
+      /* 忘过之后答对，也要直接进入「天」级间隔。
+         否则 10 分钟 × 2.6 = 26 分钟，当天又要复习好几遍，越滚越多。 */
+      p.i = p.i < 1 ? 1 : Math.min(p.i * p.e, 200);
       p.r += 1;
     }
     p.due = now + p.i * DAY;
@@ -714,6 +716,18 @@
   /* ========== 学习会话 ========== */
   let session = null;
 
+  /* 今天这一轮给什么。欠债太多就先还债：新词减半，甚至暂停 */
+  function planToday(extraNew) {
+    const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
+    const due = dueList().length;
+    let newQuota = quota;
+    if (quota > 0) {
+      if (due >= quota * 2) newQuota = 0;
+      else if (due > quota) newQuota = Math.max(0, Math.round(quota * (2 - due / quota)));
+    }
+    return { quota: quota, due: due, reviewTake: Math.min(due, quota), newQuota: newQuota };
+  }
+
   function buildQueue(extraNew, reviewOnly) {
     const now = Date.now();
     const reviews = [];
@@ -738,7 +752,7 @@
     const picks = pool.slice(0, revCap);
 
     /* 纯复习模式：一个新词都不给 */
-    const news = reviewOnly ? [] : fresh.slice(0, quota);
+    const news = reviewOnly ? [] : fresh.slice(0, planToday(extraNew).newQuota);
     const q = [];
     let i = 0;
     let j = 0;
@@ -1169,7 +1183,8 @@
       clamp(Math.min(d.newW, goal) / Math.max(1, goal), 0, 1) * 0.7 +
       clamp(d.sec / 60 / Math.max(1, S.set.targetMin), 0, 1) * 0.3;
     const st = streak();
-    const quota = S.set.dailyNew;
+    const plan = planToday(0);
+    const quota = plan.quota;
 
     const coach =
       '<div class="coach rise">' +
@@ -1179,8 +1194,9 @@
       '<button class="btn btn-primary btn-lg" data-act="start">' +
       (isNarrow()
         ? "开始学习"
-        : "开始学习 · 复习 " + Math.min(due, quota) +
-          (due > quota ? "（共 " + due + "）" : "") + " + 新词 " + quota) +
+        : "开始学习 · 复习 " + plan.reviewTake +
+          (plan.due > plan.reviewTake ? "（共 " + plan.due + "）" : "") +
+          (plan.newQuota > 0 ? " + 新词 " + plan.newQuota : " · 先还债，暂不学新词")) +
       "</button>" +
       (due > 0
         ? '<button class="btn btn-lg btn-review" data-act="review-only" title="复习全部到期的词，不学新词">' +

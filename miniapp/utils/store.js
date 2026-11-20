@@ -234,6 +234,18 @@ function gradeWord(id, g) {
 
 /* ---------- 会话队列 ---------- */
 
+/** 今天这一轮给什么。欠债太多就先还债：新词减半，甚至暂停 */
+function planToday(extraNew) {
+  const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
+  const due = dueList().length;
+  let newQuota = quota;
+  if (quota > 0) {
+    if (due >= quota * 2) newQuota = 0;
+    else if (due > quota) newQuota = Math.max(0, Math.round(quota * (2 - due / quota)));
+  }
+  return { quota: quota, due: due, reviewTake: Math.min(due, quota), newQuota: newQuota };
+}
+
 function buildQueue(extraNew, reviewOnly) {
   const now = Date.now();
   const reviews = [];
@@ -259,7 +271,7 @@ function buildQueue(extraNew, reviewOnly) {
     pool[j] = t;
   }
   const picks = pool.slice(0, revCap);
-  const news = reviewOnly ? [] : freshWords.slice(0, quota);
+  const news = reviewOnly ? [] : freshWords.slice(0, planToday(extraNew).newQuota);
 
   const q = [];
   let i = 0;
@@ -290,6 +302,7 @@ module.exports = {
   shiftKey: shiftKey,
   keyToDate: keyToDate,
   dueList: dueList,
+  planToday: planToday,
   learnedCount: learnedCount,
   avgRetention: avgRetention,
   streak: streak,

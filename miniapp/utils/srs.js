@@ -42,7 +42,8 @@ function apply(p, g) {
     out.r += 1;
   } else {
     out.e = clamp(out.e + 0.1, 1.3, 3.0);
-    out.i = out.i === 0 ? 1 : Math.min(out.i * out.e, 200);
+    // 忘过之后答对，也要直接进入「天」级间隔，否则当天反复到期
+    out.i = out.i < 1 ? 1 : Math.min(out.i * out.e, 200);
     out.r += 1;
   }
   out.due = now + out.i * DAY;

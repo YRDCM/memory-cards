@@ -46,6 +46,8 @@ Page({
 
     const totalLeft = due + goal;
 
+    const plan = store.planToday(0);
+
     this.setData({
       coachText: this.coachLine(d, due, learned, goal),
       today: store.todayKey(),
@@ -59,8 +61,9 @@ Page({
       learned: learned,
       totalLeft: totalLeft,
       ctaText:
-        "开始学习 · 复习 " + Math.min(due, goal) + (due > goal ? "（共 " + due + "）" : "") +
-        " + 新词 " + goal,
+        "开始学习 · 复习 " + plan.reviewTake +
+        (plan.due > plan.reviewTake ? "（共 " + plan.due + "）" : "") +
+        (plan.newQuota > 0 ? " + 新词 " + plan.newQuota : " · 先还债"),
       loaded: true,
     });
   },
