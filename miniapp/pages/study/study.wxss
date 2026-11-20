@@ -112,6 +112,14 @@
   color: #b4472a;
 }
 
+.ipa {
+  margin-top: 10rpx;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 28rpx;
+  color: #6b7c7c;
+  letter-spacing: 1rpx;
+}
+
 .pos {
   display: flex;
   align-items: center;

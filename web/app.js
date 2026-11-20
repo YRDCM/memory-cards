@@ -162,6 +162,7 @@
           cn: w[2] || "",
           ex: w[3] || "",
           excn: w[4] || "",
+          ipa: w[5] || "",
           deck,
         });
       });
@@ -215,6 +216,12 @@
     let n = 0;
     for (let i = 0; i < ALL.length; i++) if (S.prog[ALL[i].id]) n++;
     return n;
+  }
+
+  /* 音标行：/ˈkwaɪt/ */
+  function ipaLine(w, cls) {
+    if (!w || !w.ipa) return "";
+    return '<div class="fc-ipa' + (cls ? " " + cls : "") + '">/' + esc(w.ipa) + "/</div>";
   }
 
   /* 词性：给中文名，考试新手未必认得 n./v. 这些缩写 */
@@ -1415,7 +1422,7 @@
       const ok = session.spellResult === true;
       body =
         '<div class="fc-main">' +
-        '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" +
+        '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" + ipaLine(w) +
         '<div class="fc-pos">' + esc(w.pos) + " · " + (ok ? "✓ 拼对了" : "✗ 正确写法是这样") + "</div>" +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
@@ -1426,7 +1433,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-quiz-tag">选出正确释义</div>' +
-        '<div class="fc-word">' + esc(w.w) + "</div>" +
+        '<div class="fc-word">' + esc(w.w) + "</div>" + ipaLine(w) +
         posHTML(w.pos) +
         "</div>" +
         '<div class="fc-options">' +
@@ -1455,7 +1462,7 @@
       const ok = session.lastOk;
       body =
         '<div class="fc-main">' +
-        '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" +
+        '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" + ipaLine(w) +
         posHTML(w.pos, ok ? "✓ 答对了" : "✗ 没答对") +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
@@ -1465,7 +1472,7 @@
     } else if (!session.revealed) {
       body =
         '<div class="fc-main">' +
-        '<div class="fc-word">' + esc(w.w) + "</div>" +
+        '<div class="fc-word">' + esc(w.w) + "</div>" + ipaLine(w) +
         posHTML(w.pos) +
         '<div class="fc-meaning pending">先在心里回想它的意思，再翻开</div>' +
         "</div>" +
@@ -1478,7 +1485,7 @@
       const n3 = nextInterval(p, 3);
       body =
         '<div class="fc-main">' +
-        '<div class="fc-word">' + esc(w.w) + "</div>" +
+        '<div class="fc-word">' + esc(w.w) + "</div>" + ipaLine(w) +
         posHTML(w.pos, timesOf(p) > 1 ? "已学 " + timesOf(p) + " 次" : "第一次见") +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
@@ -1536,7 +1543,7 @@
       '<div class="wmodal" data-act="word-close">' +
       '<div class="wmodal-card">' +
       '<div class="wm-head">' +
-      '<div><div class="wm-word">' + esc(w.w) + "</div>" +
+      '<div><div class="wm-word">' + esc(w.w) + "</div>" + ipaLine(w, "wm-ipa") +
       '<div class="wm-pos">' + esc(w.pos) + "</div></div>" +
       '<div class="wm-tools">' +
       '<button class="fc-say" data-act="speak" data-text="' + esc(w.w) + '" aria-label="听发音">' + ICON_SPEAKER + "</button>" +

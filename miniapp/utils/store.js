@@ -80,6 +80,7 @@ function buildAll() {
         cn: w[2] || "",
         ex: w[3] || "",
         excn: w[4] || "",
+        ipa: w[5] || "",
         deck: deck,
       });
     }

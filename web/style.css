@@ -964,14 +964,27 @@ textarea {
   letter-spacing: -0.015em;
   word-break: break-word;
 }
+.fc-ipa {
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.fc-ipa + .fc-pos {
+  margin-top: 9px;
+}
+.wm-ipa {
+  margin-top: 4px;
+  font-size: 13.5px;
+}
 .fc-pos {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 7px;
   margin-top: 14px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-family: var(--font-mono);  font-size: 11.5px;
   color: var(--muted);
 }
 .fc-pos .pos-cn {

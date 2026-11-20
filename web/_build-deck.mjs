@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const P = (f) => path.join(here, f);
 
+/* 音标表：open-dict-data/ipa-dict 整理而来，见 tools/build-ipa.cjs */
+const IPA = fs.existsSync(P("ipa.json"))
+  ? JSON.parse(fs.readFileSync(P("ipa.json"), "utf8"))
+  : {};
+
 const POS_SEQ = /^((?:(?:n|v|vt|vi|adj|adv|prep|conj|pron|num|art|int|aux|modal)\.\s*(?:[&/,、]\s*)?)+)/i;
 
 function clean(s) {
@@ -114,7 +119,7 @@ for (const d of DECKS) {
   const sent = readSent(d.sent);
   const rows = words.map((x) => {
     const ex = sent.get(x.w.toLowerCase());
-    return [x.w, x.pos, x.cn, ex ? ex.en : "", ex ? ex.cn : ""];
+    return [x.w, x.pos, x.cn, ex ? ex.en : "", ex ? ex.cn : "", IPA[x.w.toLowerCase()] || ""];
   });
   const ordered = order(rows);
   const withEx = ordered.filter((r) => r[3]).length;
