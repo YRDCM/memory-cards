@@ -24,13 +24,18 @@ function timesOf(p) {
 }
 
 /** 打分，返回新的进度对象 */
-function apply(p, g) {
+function apply(p, g, ms) {
   const now = Date.now();
   const out = Object.assign(
     { e: 2.5, i: 0, r: 0, due: now, lapses: 0, born: now, seen: now },
     p || {}
   );
   out.n = (p ? timesOf(p) : 0) + 1;
+  if (typeof ms === 'number' && ms > 400 && ms < 120000) {
+    const cnt = out.rtn || 0;
+    out.rt = cnt ? Math.round((out.rt * cnt + ms) / (cnt + 1)) : Math.round(ms);
+    out.rtn = cnt + 1;
+  }
   if (g === 1) {
     out.e = clamp(out.e - 0.2, 1.3, 3.0);
     out.i = 10 / 1440;

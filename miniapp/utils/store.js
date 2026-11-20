@@ -235,9 +235,9 @@ function statusOf(w) {
 
 /* ---------- 打分 ---------- */
 
-function gradeWord(id, g) {
+function gradeWord(id, g, ms) {
   const isNew = !S.prog[id];
-  const p = srs.apply(S.prog[id], g);
+  const p = srs.apply(S.prog[id], g, ms);
   S.prog[id] = p;
 
   const d = day();

@@ -315,7 +315,15 @@
     return fmtSpan(d) + "前";
   }
 
-  function gradeWord(id, g) {
+  /* 结果页显示反应时 */
+  function rtMeta() {
+    if (!session || !session.elapsed) return "";
+    const s = session.elapsed / 1000;
+    const limit = SLOW_MS[session.mode] || 0;
+    const slow = session.lastOk && limit && session.elapsed > limit;
+    return " · 用时 " + (s >= 10 ? Math.round(s) + " 秒" : s.toFixed(1) + " 秒") + (slow ? "（偏慢）" : "");
+  }
+  function gradeWord(id, g, ms) {
     const now = Date.now();
     let p = S.prog[id];
     const isNew = !p;
@@ -323,6 +331,12 @@
       p = S.prog[id] = { e: 2.5, i: 0, r: 0, due: now, lapses: 0, born: now, seen: now, n: 1 };
     } else {
       p.n = (p.n || ((p.r || 0) + (p.lapses || 0))) + 1;
+    }
+    /* 反应时：答对时越快，说明提取越顺。存滚动平均 */
+    if (typeof ms === "number" && ms > 400 && ms < 120000) {
+      const cnt = p.rtn || 0;
+      p.rt = cnt ? Math.round((p.rt * cnt + ms) / (cnt + 1)) : Math.round(ms);
+      p.rtn = cnt + 1;
     }
     if (g === 1) {
       p.e = clamp(p.e - 0.2, 1.3, 3.0);
@@ -804,6 +818,14 @@
     }
     return q;
   }
+  /* 客观题答对但太慢 → 按「模糊」处理，间隔不会跳太远 */
+  const SLOW_MS = { choice: 8000, cloze: 20000, spell: 20000 };
+  function gradedForObjective() {
+    if (!session || !session.lastOk) return 1;
+    const limit = SLOW_MS[session.mode] || 8000;
+    const ms = session.elapsed || 0;
+    return ms > limit ? 2 : 3;
+  }
 
   function startSession(extraNew, reviewOnly) {
     const q = buildQueue(extraNew, reviewOnly);
@@ -848,6 +870,8 @@
     const p = progOf(w.id);
     session.revealed = false;
     session.spellResult = null;
+    session.shownAt = Date.now();
+    session.elapsed = 0;
     const mode = pickMode(w, !p);
     session.mode = mode;
     session.stage = mode;
@@ -987,7 +1011,8 @@
     const w = currentWord();
     if (!w) return;
     const wasNew = !S.prog[w.id];
-    gradeWord(w.id, g);
+    const ms = session.elapsed || (session.shownAt ? Date.now() - session.shownAt : 0);
+    gradeWord(w.id, g, ms);
     session.done += 1;
     if (g === 3) session.correct += 1;
     if (g === 1 && session.repeats < 80) {
@@ -1587,7 +1612,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" + ipaLine(w) +
-        '<div class="fc-pos">' + esc(w.pos) + " · " + (ok ? "✓ 拼对了" : "✗ 正确写法是这样") + "</div>" +
+        '<div class="fc-pos">' + esc(w.pos) + " · " + (ok ? "✓ 拼对了" : "✗ 正确写法是这样") + rtMeta() + "</div>" +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         "</div>" +
@@ -1627,7 +1652,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" + ipaLine(w) +
-        posHTML(w.pos, ok ? "✓ 答对了" : "✗ 没答对") +
+        posHTML(w.pos, (ok ? "✓ 答对了" : "✗ 没答对") + rtMeta()) +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         memoBlock(w) + fmemoHTML(w) +
@@ -1720,6 +1745,8 @@
       '<div class="wm-stat"><b>' + (p ? ret + "%" : "—") + "</b><span>现在记得</span></div>" +
       '<div class="wm-stat"><b>' + lastTxt + "</b><span>上次学习</span></div>" +
       '<div class="wm-stat"><b>' + nextTxt + "</b><span>下次复习</span></div>" +
+      '<div class="wm-stat"><b>' + (p && p.rt ? (p.rt / 1000).toFixed(1) + " 秒" : "—") +
+      "</b><span>平均反应</span></div>" +
       "</div>" +
       '<div class="wm-foot"><span class="badge ' + st + '">' + stTxt + "</span>" +
       '<span class="tiny">点空白处或按 Esc 关闭</span></div>' +
@@ -2110,6 +2137,7 @@
       if (!session || session.stage !== "choice") return;
       const i = Number(el.dataset.i);
       session.picked = i;
+      session.elapsed = Date.now() - (session.shownAt || Date.now());
       session.lastOk = i === session.correctIdx;
       session.stage = "quizResult";
       render();
@@ -2124,6 +2152,7 @@
         return;
       }
       const c = session.cloze || {};
+      session.elapsed = Date.now() - (session.shownAt || Date.now());
       session.lastOk = v === c.answer || v === String(c.word || "").toLowerCase();
       session.stage = "quizResult";
       render();
@@ -2131,7 +2160,7 @@
     }
     if (act === "quiz-next") {
       if (!session || session.stage !== "quizResult") return;
-      answer(session.lastOk ? 3 : 1);
+      answer(gradedForObjective());
       return;
     }
     if (act === "grade") {
@@ -2144,7 +2173,7 @@
     }
     if (act === "next") {
       if (session && session.stage === "spellResult") {
-        answer(session.spellResult ? 3 : 1);
+        answer(session.spellResult ? gradedForObjective() : 1);
       }
       return;
     }
@@ -2407,6 +2436,7 @@
       return;
     }
     session.spellResult = val === w.id;
+    session.elapsed = Date.now() - (session.shownAt || Date.now());
     session.stage = "spellResult";
     render();
     toast(session.spellResult ? "拼对了。" : "差一点。多读两遍再拼一次。", session.spellResult ? "" : "warn");

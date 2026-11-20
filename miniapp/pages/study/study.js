@@ -291,6 +291,7 @@ Page({
     ipa: "",
     memoText: "",
     memoAuto: "",
+    rtText: "",
     posCn: "",
     posMeta: "",
     memoParts: [],
@@ -450,6 +451,7 @@ Page({
       patch.hintCn = shortCn(w.cn);
     }
 
+    this._shownAt = Date.now();
     this.setData(patch);
   },
 
@@ -467,7 +469,7 @@ Page({
       wx.showToast({ title: "先写点什么", icon: "none" });
       return;
     }
-    this.setData({ spellOk: v === this.data.word.toLowerCase(), stage: "spellResult" });
+    this.setData({ spellOk: v === this.data.word.toLowerCase(), rtText: this.rtText(), stage: "spellResult" });
   },
 
   onSpellNext() {
@@ -481,6 +483,7 @@ Page({
     this.setData({
       picked: i,
       lastOk: i === this.data.correctIdx,
+      rtText: this.rtText(),
       stage: "quizResult",
     });
   },
@@ -496,12 +499,19 @@ Page({
     const c = this.data.cloze || {};
     this.setData({
       lastOk: v === c.answer || v === String(c.word || "").toLowerCase(),
+      rtText: this.rtText(),
       stage: "quizResult",
     });
   },
 
   onQuizNext() {
     this.answer(this.data.lastOk ? 3 : 1);
+  },
+
+  rtText() {
+    if (!this._shownAt) return '';
+    const s = (Date.now() - this._shownAt) / 1000;
+    return ' · 用时 ' + (s >= 10 ? Math.round(s) + ' 秒' : s.toFixed(1) + ' 秒');
   },
 
   onGrade(e) {
@@ -512,7 +522,8 @@ Page({
     const s = this.session;
     if (!s) return;
     const id = s.q[s.idx];
-    store.gradeWord(id, g);
+    const ms = this._shownAt ? Date.now() - this._shownAt : 0;
+    store.gradeWord(id, g, ms);
     s.done += 1;
     if (g === 3) s.correct += 1;
 

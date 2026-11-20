@@ -36,7 +36,7 @@
     <block wx:elif="{{stage === 'spellResult'}}">
       <view class="fc-body">
         <view class="word {{spellOk ? 'ok' : 'bad'}}">{{word}}</view><view wx:if="{{ipa}}" class="ipa">/{{ipa}}/</view>
-        <view class="pos">{{pos}} · {{spellOk ? '✓ 拼对了' : '✗ 正确写法是这样'}}</view>
+        <view class="pos">{{pos}} · {{spellOk ? '✓ 拼对了' : '✗ 正确写法是这样'}}{{rtText}}</view>
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
@@ -79,7 +79,7 @@
     <block wx:elif="{{stage === 'quizResult'}}">
       <view class="fc-body">
         <view class="word {{lastOk ? 'ok' : 'bad'}}">{{word}}</view><view wx:if="{{ipa}}" class="ipa">/{{ipa}}/</view>
-        <view class="pos">{{pos}} · {{lastOk ? '✓ 答对了' : '✗ 没答对'}}</view>
+        <view class="pos">{{pos}} · {{lastOk ? '✓ 答对了' : '✗ 没答对'}}{{rtText}}</view>
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
