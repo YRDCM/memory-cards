@@ -292,6 +292,27 @@
     return Math.max(1, Math.round(d / 30)) + " 个月后";
   }
 
+  /* 时间跨度：分钟 → 小时 → 天 → 月 → 年，不带前后缀 */
+  function fmtSpan(d) {
+    d = Math.max(0, d);
+    const mins = d * 1440;
+    if (mins < 1) return "刚刚";
+    if (mins < 60) return Math.round(mins) + " 分钟";
+    const hrs = d * 24;
+    if (hrs < 24) return Math.round(hrs) + " 小时";
+    if (d < 30) return Math.round(d) + " 天";
+    if (d < 365) return Math.round(d / 30) + " 个月";
+    return (d / 365).toFixed(1) + " 年";
+  }
+
+  /* 多久以前 */
+  function agoText(ts) {
+    if (!ts) return "—";
+    const d = (Date.now() - ts) / DAY;
+    if (d * 1440 < 1) return "刚刚";
+    return fmtSpan(d) + "前";
+  }
+
   function gradeWord(id, g) {
     const now = Date.now();
     let p = S.prog[id];
@@ -1536,8 +1557,8 @@
       { new: "未学", learn: "学习中", due: "待复习", ok: "已掌握", expert: "熟练" }[st] || "未学";
     const ret = p ? Math.round(retention(p) * 100) : 0;
     const left = p ? (p.due - Date.now()) / DAY : 0;
-    const nextTxt = p ? (left <= 0 ? "现在就该复习" : fmtDays(left) + "后") : "—";
-    const lastTxt = p && p.seen ? fmtDays((Date.now() - p.seen) / DAY) + "前" : "—";
+    const nextTxt = p ? (left <= 0 ? "该复习了" : fmtSpan(left) + "后") : "—";
+    const lastTxt = p && p.seen ? agoText(p.seen) : "—";
 
     return (
       '<div class="wmodal" data-act="word-close">' +
