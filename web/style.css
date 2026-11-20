@@ -1040,7 +1040,7 @@ textarea {
   width: 21px;
   height: 21px;
   margin-left: 6px;
-  vertical-align: -4px;
+  vertical-align: middle;
   border: 1px solid transparent;
   border-radius: 50%;
   background: transparent;
