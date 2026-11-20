@@ -254,6 +254,17 @@
   line-height: 1.45;
 }
 
+.ex-say {
+  display: inline-block;
+  margin-left: 8rpx;
+  font-size: 26rpx;
+  opacity: 0.75;
+}
+
+.ex-say:active {
+  opacity: 1;
+}
+
 .cloze-sentence {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 36rpx;

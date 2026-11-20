@@ -241,6 +241,12 @@ Page({
     });
   },
 
+  onSpeakEx() {
+    const s = this.data.ex;
+    if (!s) return;
+    tts.speakSentence(s);
+  },
+
   startSession(extraNew) {
     const q = store.buildQueue(extraNew);
     if (!q.length) {

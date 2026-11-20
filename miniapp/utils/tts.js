@@ -25,17 +25,27 @@ function available() {
   return true;
 }
 
-function speak(text) {
-  const word = String(text || "").trim();
-  if (!word) return;
+function play(url) {
   const a = getAudio();
-  const url = API + "/audio?w=" + encodeURIComponent(word.slice(0, 120));
   current = url;
   try {
     a.stop();
   } catch (e) {}
   a.src = url;
   a.play();
+}
+
+function speak(text) {
+  const word = String(text || "").trim();
+  if (!word) return;
+  play(API + "/audio?w=" + encodeURIComponent(word.slice(0, 120)));
+}
+
+/* 整句朗读（例句），服务端走另一个 TTS */
+function speakSentence(text) {
+  const s = String(text || "").trim();
+  if (!s) return;
+  play(API + "/audio?s=" + encodeURIComponent(s.slice(0, 240)));
 }
 
 function stop() {
@@ -47,4 +57,9 @@ function stop() {
   current = "";
 }
 
-module.exports = { available: available, speak: speak, stop: stop };
+module.exports = {
+  available: available,
+  speak: speak,
+  speakSentence: speakSentence,
+  stop: stop,
+};

@@ -38,7 +38,7 @@
         <view class="word {{spellOk ? 'ok' : 'bad'}}">{{word}}</view>
         <view class="pos">{{pos}} · {{spellOk ? '✓ 拼对了' : '✗ 正确写法是这样'}}</view>
         <view class="meaning">{{cn}}</view>
-        <view wx:if="{{ex}}" class="ex">{{ex}}</view>
+        <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
       </view>
       <view class="fc-foot">
@@ -81,7 +81,7 @@
         <view class="word {{lastOk ? 'ok' : 'bad'}}">{{word}}</view>
         <view class="pos">{{pos}} · {{lastOk ? '✓ 答对了' : '✗ 没答对'}}</view>
         <view class="meaning">{{cn}}</view>
-        <view wx:if="{{ex}}" class="ex">{{ex}}</view>
+        <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
 
         <view wx:if="{{memoParts.length || memoFam.length}}" class="memo">
@@ -130,7 +130,7 @@
         <view class="word">{{word}}</view>
         <view class="pos">{{posLine}}</view>
         <view class="meaning">{{cn}}</view>
-        <view wx:if="{{ex}}" class="ex">{{ex}}</view>
+        <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
 
         <view wx:if="{{memoParts.length || memoFam.length}}" class="memo">

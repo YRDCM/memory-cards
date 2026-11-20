@@ -546,15 +546,13 @@
     return audioEl;
   }
 
-  function speak(text) {
-    const word = String(text || "").trim();
-    if (!word) return;
+  function playAudio(url) {
     const a = audio();
     const rate = clamp(Number(S.set.rate) || 1, 0.5, 1.6);
     try {
       a.pause();
       a.currentTime = 0;
-      a.src = SPEAK_BASE + encodeURIComponent(word.slice(0, 120));
+      a.src = url;
       a.playbackRate = rate;
       a.preservesPitch = true; /* 慢放时保持音调，听得清本来怎么读 */
       const p = a.play();
@@ -566,6 +564,27 @@
         });
       }
     } catch (e) {}
+  }
+
+  function speak(text) {
+    const word = String(text || "").trim();
+    if (!word) return;
+    playAudio(SPEAK_BASE + encodeURIComponent(word.slice(0, 120)));
+  }
+
+  /* 整句朗读（例句）：服务端走另一个 TTS，支持长句 */
+  function speakSentence(text) {
+    const s = String(text || "").trim();
+    if (!s) return;
+    playAudio("/english/api/audio?s=" + encodeURIComponent(s.slice(0, 240)));
+  }
+
+  /* 例句后面那个小喇叭 */
+  function exBtn(text) {
+    return (
+      '<button class="ex-say" data-act="speak-sentence" data-text="' +
+      esc(text) + '" aria-label="朗读例句" title="朗读例句">' + ICON_SPEAKER + "</button>"
+    );
   }
 
   function beep() {
@@ -1327,7 +1346,7 @@
         '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" +
         '<div class="fc-pos">' + esc(w.pos) + " · " + (ok ? "✓ 拼对了" : "✗ 正确写法是这样") + "</div>" +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
-        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
+        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         "</div>" +
         '<div class="fc-actions"><button class="btn btn-primary btn-lg" data-act="next">继续（Enter）</button></div>';
     } else if (session.stage === "choice") {
@@ -1367,7 +1386,7 @@
         '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" +
         '<div class="fc-pos">' + esc(w.pos) + (ok ? " · ✓ 答对了" : " · ✗ 没答对") + "</div>" +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
-        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
+        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         memoBlock(w) +
         "</div>" +
         '<div class="fc-actions"><button class="btn btn-primary btn-lg" data-act="quiz-next">继续（Enter）</button></div>';
@@ -1390,7 +1409,7 @@
         '<div class="fc-word">' + esc(w.w) + "</div>" +
         '<div class="fc-pos">' + esc(w.pos) + " · " + (timesOf(p) > 1 ? "已学 " + timesOf(p) + " 次" : "第一次见") + "</div>" +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
-        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
+        (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         memoBlock(w) +
         "</div>" +
         '<div class="grade-row">' +
@@ -1449,7 +1468,7 @@
       '<button class="fc-say" data-act="speak" data-text="' + esc(w.w) + '" aria-label="听发音">' + ICON_SPEAKER + "</button>" +
       "</div></div>" +
       '<div class="wm-cn">' + esc(w.cn) + "</div>" +
-      (w.ex ? '<div class="wm-ex">' + esc(w.ex) + '</div><div class="wm-excn">' + esc(w.excn) + "</div>" : "") +
+      (w.ex ? '<div class="wm-ex">' + esc(w.ex) + exBtn(w.ex) + '</div><div class="wm-excn">' + esc(w.excn) + "</div>" : "") +
       memoBlock(w) +
       '<div class="wm-stats">' +
       '<div class="wm-stat"><b>' + n + "</b><span>学过次数</span></div>" +
@@ -1819,6 +1838,10 @@
     }
     if (act === "speak") {
       speak(el.dataset.text);
+      return;
+    }
+    if (act === "speak-sentence") {
+      speakSentence(el.dataset.text);
       return;
     }
     if (act === "test-voice") {

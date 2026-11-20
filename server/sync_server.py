@@ -5,6 +5,7 @@
 不存账号、不存密码，同步码本身即凭据。
 """
 import glob
+import hashlib
 import json
 import os
 import re
@@ -226,36 +227,77 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def audio(self, q):
-        """单词发音：代理 + 落盘缓存，客户端不用碰第三方域名"""
+        """发音：单词走有道词典，整句走百度翻译 TTS。都落盘缓存。"""
         word = ((q.get("w") or [""])[0] or "").strip()
-        if not WORD_RE.match(word):
-            return self._send(400, {"error": "bad word"})
-        key = re.sub(r"[^a-z0-9]", "", word.lower()) or "x"
+        sent = ((q.get("s") or [""])[0] or "").strip()
+        if word:
+            return self._audio_word(word)
+        if sent:
+            return self._audio_sentence(sent)
+        return self._send(400, {"error": "no text"})
+
+    def _cache_read(self, key):
         try:
-            os.makedirs(AUDIO_DIR, exist_ok=True)
-        except Exception:
-            pass
-        fn = os.path.join(AUDIO_DIR, key + ".mp3")
-        try:
+            fn = os.path.join(AUDIO_DIR, key + ".mp3")
             if os.path.exists(fn) and os.path.getsize(fn) > 512:
                 with open(fn, "rb") as f:
-                    return self._send_audio(f.read())
+                    return f.read()
         except Exception:
             pass
+        return None
+
+    def _cache_write(self, key, data):
         try:
-            url = "https://dict.youdao.com/dictvoice?type=2&audio=" + quote(word)
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=6) as r:
-                data = r.read()
-        except Exception:
-            return self._send(502, {"error": "tts failed"})
-        if not data or len(data) < 512:
-            return self._send(404, {"error": "no audio"})
-        try:
+            fn = os.path.join(AUDIO_DIR, key + ".mp3")
             with open(fn, "wb") as f:
                 f.write(data)
         except Exception:
             pass
+
+    def _fetch(self, url, referer=None):
+        headers = {"User-Agent": "Mozilla/5.0"}
+        if referer:
+            headers["Referer"] = referer
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return r.read()
+
+    def _audio_word(self, word):
+        if not WORD_RE.match(word):
+            return self._send(400, {"error": "bad word"})
+        key = "w_" + (re.sub(r"[^a-z0-9]", "", word.lower()) or "x")
+        data = self._cache_read(key)
+        if data:
+            return self._send_audio(data)
+        try:
+            data = self._fetch(
+                "https://dict.youdao.com/dictvoice?type=2&audio=" + quote(word)
+            )
+        except Exception:
+            return self._send(502, {"error": "tts failed"})
+        if not data or len(data) < 512:
+            return self._send(404, {"error": "no audio"})
+        self._cache_write(key, data)
+        return self._send_audio(data)
+
+    def _audio_sentence(self, text):
+        if len(text) > 240:
+            text = text[:240]
+        data = self._cache_read("s_" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:24])
+        if data:
+            return self._send_audio(data)
+        try:
+            data = self._fetch(
+                "https://fanyi.baidu.com/gettts?lan=en&spd=3&source=web&text=" + quote(text),
+                referer="https://fanyi.baidu.com/",
+            )
+        except Exception:
+            return self._send(502, {"error": "tts failed"})
+        if not data or len(data) < 512:
+            return self._send(404, {"error": "no audio"})
+        self._cache_write(
+            "s_" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:24], data
+        )
         return self._send_audio(data)
 
     def admin_get(self):
