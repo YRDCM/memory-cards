@@ -236,7 +236,6 @@ function gradeWord(id, g) {
 
 function buildQueue(extraNew) {
   const now = Date.now();
-  const d = day();
   const reviews = [];
   const freshWords = [];
   for (let i = 0; i < ALL.length; i++) {
@@ -245,23 +244,30 @@ function buildQueue(extraNew) {
     if (!p) freshWords.push(w);
     else if (p.due <= now) reviews.push(w);
   }
-  // 洗牌，避免每次顺序一样
-  for (let i = reviews.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const t = reviews[i];
-    reviews[i] = reviews[j];
-    reviews[j] = t;
-  }
+  // 逾期最久的优先，再在前 2 倍里打散
+  reviews.sort(function (a, b) {
+    return ((S.prog[a.id] || {}).due || 0) - ((S.prog[b.id] || {}).due || 0);
+  });
   const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
+  // 复习也按一轮的量发放，剩下的留到下一轮
+  const revCap = quota;
+  const pool = reviews.slice(0, revCap * 2);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = pool[i];
+    pool[i] = pool[j];
+    pool[j] = t;
+  }
+  const picks = pool.slice(0, revCap);
   const news = freshWords.slice(0, quota);
 
   const q = [];
   let i = 0;
   let j = 0;
-  while (i < news.length || j < reviews.length) {
+  while (i < news.length || j < picks.length) {
     if (i < news.length) q.push(news[i++].id);
-    if (j < reviews.length) q.push(reviews[j++].id);
-    if (j < reviews.length) q.push(reviews[j++].id);
+    if (j < picks.length) q.push(picks[j++].id);
+    if (j < picks.length) q.push(picks[j++].id);
   }
   return q;
 }

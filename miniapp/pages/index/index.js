@@ -58,7 +58,9 @@ Page({
       streak: store.streak(),
       learned: learned,
       totalLeft: totalLeft,
-      ctaText: due > 0 ? "开始学习 · 复习 " + due + " + 新词 " + goal : "开始学习 · 新词 " + goal,
+      ctaText:
+        "开始学习 · 复习 " + Math.min(due, goal) + (due > goal ? "（共 " + due + "）" : "") +
+        " + 新词 " + goal,
       loaded: true,
     });
   },

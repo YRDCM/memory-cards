@@ -693,17 +693,26 @@
       if (!p) fresh.push(w);
       else if (p.due <= now) reviews.push(w);
     }
-    shuffle(reviews);
+    /* 逾期最久的优先，再在前 2 倍里打散 */
+    reviews.sort((a, b) => ((S.prog[a.id] || {}).due || 0) - ((S.prog[b.id] || {}).due || 0));
+
     /* dailyNew 是每轮的配给量，不是每日上限 —— 想多学随时再开一轮 */
     const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
+    /* 复习也按一轮的量发放：昨天背了三轮，今天不会被三倍的复习压垮。
+       剩下的留在池子里，下一轮接着来，不丢。 */
+    const revCap = quota;
+    const pool = reviews.slice(0, revCap * 2);
+    shuffle(pool);
+    const picks = pool.slice(0, revCap);
+
     const news = fresh.slice(0, quota);
     const q = [];
     let i = 0;
     let j = 0;
-    while (i < news.length || j < reviews.length) {
+    while (i < news.length || j < picks.length) {
       if (i < news.length) q.push(news[i++].id);
-      if (j < reviews.length) q.push(reviews[j++].id);
-      if (j < reviews.length) q.push(reviews[j++].id);
+      if (j < picks.length) q.push(picks[j++].id);
+      if (j < picks.length) q.push(picks[j++].id);
     }
     return q;
   }
@@ -1132,9 +1141,8 @@
       '<button class="btn btn-primary btn-lg" data-act="start">' +
       (isNarrow()
         ? "开始学习"
-        : due > 0
-        ? "开始学习 · 复习 " + due + " + 新词 " + quota
-        : "开始学习 · 新词 " + quota) +
+        : "开始学习 · 复习 " + Math.min(due, quota) +
+          (due > quota ? "（共 " + due + "）" : "") + " + 新词 " + quota) +
       "</button></div>";
 
     const map =
