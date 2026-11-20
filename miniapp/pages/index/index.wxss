@@ -76,3 +76,12 @@
   text-align: center;
   margin-top: 32rpx;
 }
+
+/* 纯复习：次要按钮 */
+.btn-review {
+  margin-top: 16rpx;
+  background: transparent;
+  border-color: #d6dbd0;
+  color: #3d4f52;
+  box-shadow: none;
+}

@@ -85,4 +85,8 @@ Page({
   onStart() {
     wx.navigateTo({ url: "/pages/study/study?extra=0" });
   },
+
+  onReviewOnly() {
+    wx.navigateTo({ url: "/pages/study/study?review=1" });
+  },
 });

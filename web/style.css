@@ -274,6 +274,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   padding: 14px 20px;
   margin-bottom: 16px;
   border-radius: var(--radius);
@@ -378,6 +379,18 @@ textarea {
 .btn-lg {
   padding: 12px 22px;
   font-size: 15px;
+}
+
+/* 纯复习：次要按钮，别跟主按钮抢 */
+.btn-review {
+  color: var(--ink-2);
+  background: transparent;
+  border-color: var(--line);
+}
+.btn-review:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  background: var(--soft);
 }
 
 .btn-ghost {

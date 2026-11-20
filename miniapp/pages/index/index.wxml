@@ -50,6 +50,9 @@
   </view>
 
   <view class="btn btn-primary btn-block" bindtap="onStart">{{ctaText}}</view>
+  <view wx:if="{{dueLeft > 0}}" class="btn btn-block btn-review" bindtap="onReviewOnly">
+    只复习旧词（{{dueLeft > newGoal ? newGoal : dueLeft}}）
+  </view>
 
   <view class="foot tiny">已学 {{learned}} 词 · 数据只存在这台手机</view>
 </view>

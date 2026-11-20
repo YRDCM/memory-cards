@@ -714,7 +714,7 @@
   /* ========== 学习会话 ========== */
   let session = null;
 
-  function buildQueue(extraNew) {
+  function buildQueue(extraNew, reviewOnly) {
     const now = Date.now();
     const reviews = [];
     const fresh = [];
@@ -736,7 +736,8 @@
     shuffle(pool);
     const picks = pool.slice(0, revCap);
 
-    const news = fresh.slice(0, quota);
+    /* 纯复习模式：一个新词都不给 */
+    const news = reviewOnly ? [] : fresh.slice(0, quota);
     const q = [];
     let i = 0;
     let j = 0;
@@ -748,14 +749,19 @@
     return q;
   }
 
-  function startSession(extraNew) {
-    const q = buildQueue(extraNew);
+  function startSession(extraNew, reviewOnly) {
+    const q = buildQueue(extraNew, reviewOnly);
     if (!q.length) {
-      toast("这个范围里的词都学完了。去设置里换一个大一点的词汇范围。");
+      toast(
+        reviewOnly
+          ? "现在没有到期的词，过几小时再来。"
+          : "这个范围里的词都学完了。去设置里换一个大一点的词汇范围。"
+      );
       return;
     }
     session = {
       q,
+      reviewOnly: !!reviewOnly,
       idx: 0,
       total: q.length,
       done: 0,
@@ -1174,7 +1180,13 @@
         ? "开始学习"
         : "开始学习 · 复习 " + Math.min(due, quota) +
           (due > quota ? "（共 " + due + "）" : "") + " + 新词 " + quota) +
-      "</button></div>";
+      "</button>" +
+      (due > 0
+        ? '<button class="btn btn-lg btn-review" data-act="review-only" title="只复习到期的词，不学新词">' +
+          (isNarrow() ? "只复习" : "只复习 " + Math.min(due, quota)) +
+          "</button>"
+        : "") +
+      "</div>";
 
     const map =
       '<section class="panel map-panel rise">' +
@@ -1460,7 +1472,8 @@
 
     return (
       '<div class="study">' +
-      '<div class="study-top"><span>' + (session.done + 1) + " / " + total + "</span>" +
+      '<div class="study-top"><span>' +
+      (session.reviewOnly ? "复习 · " : "") + (session.done + 1) + " / " + total + "</span>" +
       '<div class="study-progress"><i style="width:' + pct + '%"></i></div>' +
       '<button class="close" data-act="end">结束本轮</button></div>' +
       '<div class="flashcard" id="card">' +
@@ -1862,6 +1875,10 @@
     }
     if (act === "start") {
       startSession(0);
+      return;
+    }
+    if (act === "review-only") {
+      startSession(0, true);
       return;
     }
     if (act === "extra") {

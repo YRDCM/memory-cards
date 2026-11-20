@@ -234,7 +234,7 @@ function gradeWord(id, g) {
 
 /* ---------- 会话队列 ---------- */
 
-function buildQueue(extraNew) {
+function buildQueue(extraNew, reviewOnly) {
   const now = Date.now();
   const reviews = [];
   const freshWords = [];
@@ -259,7 +259,7 @@ function buildQueue(extraNew) {
     pool[j] = t;
   }
   const picks = pool.slice(0, revCap);
-  const news = freshWords.slice(0, quota);
+  const news = reviewOnly ? [] : freshWords.slice(0, quota);
 
   const q = [];
   let i = 0;

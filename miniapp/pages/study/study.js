@@ -247,7 +247,7 @@ Page({
   onLoad(options) {
     OPT_POOL = null;
     this.setData({ ttsOk: tts.available() });
-    this.startSession(Number(options.extra || 0));
+    this.startSession(Number(options.extra || 0), options.review === "1");
   },
 
   onUnload() {
@@ -271,18 +271,21 @@ Page({
     tts.speakSentence(s);
   },
 
-  startSession(extraNew) {
-    const q = store.buildQueue(extraNew);
+  startSession(extraNew, reviewOnly) {
+    const q = store.buildQueue(extraNew, reviewOnly);
     if (!q.length) {
       wx.showModal({
-        title: "没有要背的词",
-        content: "今天的新词和复习都做完了。可以去设置里换一个词汇范围，或者明天再来。",
+        title: reviewOnly ? "没有到期的词" : "没有要背的词",
+        content: reviewOnly
+          ? "现在没有到期的单词，过几个小时再来复习。"
+          : "今天的新词和复习都做完了。可以去设置里换一个词汇范围，或者明天再来。",
         showCancel: false,
         success: () => wx.navigateBack(),
       });
       return;
     }
     this.session = { q: q, idx: 0, done: 0, correct: 0, repeats: 0 };
+    this.setData({ reviewOnly: !!reviewOnly });
     this.paint();
   },
 
