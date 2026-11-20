@@ -1385,9 +1385,69 @@
     return s.length > 8 ? s.slice(0, 8) : s;
   }
 
-  /* ---------- 联想记忆：自己写的那句话 ---------- */
+  /* ---------- 联想记忆：系统自动写 + 你可以改 ---------- */
 
   let memoEditId = "";
+
+  /* 释义清洁：去掉词形表、括号补充，必须有中文 */
+  function cleanGloss(cn) {
+    let s = String(cn || "");
+    s = s.replace(/\[[^\]]*\]/g, " ");
+    s = s.replace(/\([^)]*\)/g, " ");
+    s = s.split(/[；;，,、]/)[0].trim();
+    if (!/[\u4e00-\u9fa5]/.test(s)) return "";
+    return s.length > 8 ? s.slice(0, 8) : s;
+  }
+
+  /* 词中词：这个词里藏着另一个认识的词 */
+  function innerWord(w) {
+    const id = w.id;
+    let best = null;
+    for (let len = Math.min(7, id.length - 2); len >= 3; len--) {
+      for (let i = 0; i + len <= id.length; i++) {
+        const sub = id.slice(i, i + len);
+        if (sub === id) continue;
+        const hit = MAP.get(sub);
+        if (!hit) continue;
+        const g = cleanGloss(hit.cn);
+        if (!g) continue;
+        const edge = i === 0 || i + len === id.length ? 1 : 0;
+        const score = len * 2 + edge;
+        if (!best || score > best.score) best = { sub: sub, cn: g, score: score };
+      }
+    }
+    return best;
+  }
+
+  /* 自动联想：把零件串成一句能记的话，而不是复述拆解表 */
+  function autoMemo(w) {
+    const mean = cleanGloss(w.cn);
+    const parts = splitWord(w);
+    if (parts && parts[0] && parts[1] && parts[0].g && parts[1].g) {
+      const g = (s) => cleanGloss(String(s).replace(/^(名词|动词|形容词|副词|介词|连词|代词)：/, ""));
+      const a = parts[0].t.replace(/-$/, "");
+      const b = parts[1].t.replace(/^-/, "");
+      return (
+        a + "（" + g(parts[0].g) + "）+ " + b + "（" + g(parts[1].g) + "）" +
+        "→ 连起来就是「" + (mean || w.cn) + "」"
+      );
+    }
+    const inner = innerWord(w);
+    if (inner) {
+      return (
+        "里面藏着 " + inner.sub + "（" + inner.cn + "）——先把熟悉的这块钉住，" +
+        "再记整词是「" + (mean || w.cn) + "」"
+      );
+    }
+    const fam = familyOf(w).filter((x) => cleanGloss(x.cn))[0];
+    if (fam) {
+      return (
+        "和 " + fam.w + "（" + cleanGloss(fam.cn) + "）长得很像——" +
+        "一个是「" + (mean || w.cn) + "」，一个是「" + cleanGloss(fam.cn) + "」，别混"
+      );
+    }
+    return "";
+  }
 
   function myMemo(w) {
     const m = (S.memo || {})[w.id];
@@ -1395,18 +1455,22 @@
   }
 
   const MEMO_HINT =
-    "三种起手式：① 读音像什么中文？（am·bu·lance →「俺不能死」）② 能拆成哪几块？（business = busi + ness）③ 编一个荒诞的画面。" +
-    "自己写的最管用——下次翻到背面会先看到它。";
+    "这个词没有能拆的结构，也没有熟悉的词藏在里面。" +
+    "试试谐音（读音像什么中文？），或者编一个荒诞的画面——点「改」自己写一句。";
 
   function fmemoHTML(w) {
-    const t = myMemo(w);
+    const mine = myMemo(w);
+    const auto = mine ? "" : autoMemo(w);
     return (
       '<div class="fmemo">' +
       '<div class="fmemo-head"><span class="fmemo-k">联想</span>' +
+      (mine ? '<span class="fmemo-tag">我的</span>' : auto ? '<span class="fmemo-tag">自动</span>' : "") +
       '<button class="fmemo-edit" data-act="memo-edit" data-id="' + esc(w.id) + '">' +
-      (t ? "改" : "写一个") + "</button></div>" +
-      (t
-        ? '<div class="fmemo-text">' + esc(t) + "</div>"
+      (mine ? "改" : "自己写") + "</button></div>" +
+      (mine
+        ? '<div class="fmemo-text">' + esc(mine) + "</div>"
+        : auto
+        ? '<div class="fmemo-text auto">' + esc(auto) + "</div>"
         : '<div class="fmemo-hint">' + MEMO_HINT + "</div>") +
       "</div>"
     );

@@ -1440,6 +1440,19 @@ textarea {
   letter-spacing: 0.1em;
   color: var(--muted);
 }
+.fmemo-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 5px;
+  line-height: 1.5;
+}
+.fmemo-text.auto {
+  color: var(--ink-2);
+}
 .fmemo-edit {
   margin-left: auto;
   appearance: none;

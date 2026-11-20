@@ -259,6 +259,19 @@
   color: #6b7c7c;
 }
 
+.fmemo-tag {
+  margin-left: 12rpx;
+  font-size: 18rpx;
+  color: #6b7c7c;
+  border: 1rpx solid #d6dbd0;
+  border-radius: 6rpx;
+  padding: 0 8rpx;
+}
+
+.fmemo-text.fmemo-auto {
+  color: #3d4f52;
+}
+
 .fmemo-edit {
   margin-left: auto;
   font-size: 22rpx;

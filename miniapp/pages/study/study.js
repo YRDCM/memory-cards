@@ -26,6 +26,60 @@ function posCN(pos) {
   return out.join("／");
 }
 
+/* ---------- 自动联想 ---------- */
+
+function cleanGloss(cn) {
+  var s = String(cn || "");
+  s = s.replace(/\[[^\]]*\]/g, " ");
+  s = s.replace(/\([^)]*\)/g, " ");
+  s = s.split(/[；;，,、]/)[0].trim();
+  if (!/[\u4e00-\u9fa5]/.test(s)) return "";
+  return s.length > 8 ? s.slice(0, 8) : s;
+}
+
+function innerWord(w) {
+  var id = w.id;
+  var best = null;
+  for (var len = Math.min(7, id.length - 2); len >= 3; len--) {
+    for (var i = 0; i + len <= id.length; i++) {
+      var sub = id.slice(i, i + len);
+      if (sub === id) continue;
+      var hit = store.map()[sub];
+      if (!hit) continue;
+      var g = cleanGloss(hit.cn);
+      if (!g) continue;
+      var edge = i === 0 || i + len === id.length ? 1 : 0;
+      var score = len * 2 + edge;
+      if (!best || score > best.score) best = { sub: sub, cn: g, score: score };
+    }
+  }
+  return best;
+}
+
+function autoMemo(w) {
+  var mean = cleanGloss(w.cn) || w.cn;
+  var parts = splitWord(w);
+  if (parts && parts[0] && parts[1] && parts[0].g && parts[1].g) {
+    var g = function (s) {
+      return cleanGloss(String(s).replace(/^(名词|动词|形容词|副词|介词|连词|代词)：/, ""));
+    };
+    var a = parts[0].t.replace(/-$/, "");
+    var b = parts[1].t.replace(/^-/, "");
+    return a + "（" + g(parts[0].g) + "）+ " + b + "（" + g(parts[1].g) + "）→ 连起来就是「" + mean + "」";
+  }
+  var inner = innerWord(w);
+  if (inner) {
+    return "里面藏着 " + inner.sub + "（" + inner.cn + "）——先把熟悉的这块钉住，再记整词是「" + mean + "」";
+  }
+  var fam = familyOf(w).filter(function (x) {
+    return cleanGloss(x.cn);
+  })[0];
+  if (fam) {
+    return "和 " + fam.w + "（" + cleanGloss(fam.cn) + "）长得很像——一个是「" + mean + "」，一个是「" + cleanGloss(fam.cn) + "」，别混";
+  }
+  return "";
+}
+
 /* ---------- 题型工具 ---------- */
 
 /* 释义太长不适合做选项：去掉内嵌词性、只留前两个义项、16 字截断 */
@@ -236,6 +290,7 @@ Page({
     hintCn: "",
     ipa: "",
     memoText: "",
+    memoAuto: "",
     posCn: "",
     posMeta: "",
     memoParts: [],
@@ -357,6 +412,7 @@ Page({
       pct: Math.round((s.done / Math.max(s.done + (s.q.length - s.idx), 1)) * 100),
       word: w.w,
       ipa: w.ipa || "",
+      memoAuto: autoMemo(w),
       memoText: store.getMemo(id),
       pos: w.pos,
       cn: w.cn,
