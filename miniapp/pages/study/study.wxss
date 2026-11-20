@@ -99,7 +99,7 @@
 .word {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 84rpx;
-  line-height: 1.1;
+  line-height: 1.18;
   letter-spacing: -1rpx;
   word-break: break-all;
 }
@@ -120,7 +120,7 @@
   font-size: 24rpx;
   color: #6b7c7c;
   letter-spacing: 1rpx;
-  margin-top: 12rpx;
+  margin-top: 22rpx;
 }
 
 .pos-cn {
