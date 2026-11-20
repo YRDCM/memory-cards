@@ -3,6 +3,29 @@ const srs = require("../../utils/srs.js");
 const sync = require("../../utils/sync.js");
 const tts = require("../../utils/tts.js");
 
+/* ---------- 词性中文名 ---------- */
+
+const POS_CN = {
+  n: "名词", v: "动词", vt: "及物动词", vi: "不及物动词", adj: "形容词",
+  adv: "副词", prep: "介词", conj: "连词", pron: "代词", num: "数词",
+  art: "冠词", int: "感叹词", aux: "助动词", modal: "情态动词",
+  abbr: "缩写", phrase: "短语", phr: "短语", pl: "复数",
+};
+
+function posCN(pos) {
+  const raw = String(pos || "").trim();
+  if (!raw) return "";
+  const toks = raw.split(/\s*[&,，/]\s*/).filter(Boolean);
+  const out = [];
+  for (let i = 0; i < toks.length; i++) {
+    const k = toks[i].replace(/\./g, "").trim().toLowerCase();
+    const c = POS_CN[k];
+    if (!c) return "";
+    out.push(c);
+  }
+  return out.join("／");
+}
+
 /* ---------- 题型工具 ---------- */
 
 /* 释义太长不适合做选项：去掉内嵌词性、只留前两个义项、16 字截断 */
@@ -211,7 +234,8 @@ Page({
     cloze: null,
     quizTag: "",
     hintCn: "",
-    posLine: "",
+    posCn: "",
+    posMeta: "",
     memoParts: [],
     memoFam: [],
     ttsOk: false,
@@ -320,7 +344,8 @@ Page({
       correctIdx: -1,
       cloze: null,
       quizTag: "",
-      posLine: w.pos + (srs.timesOf(p) > 1 ? " · 已学 " + srs.timesOf(p) + " 次" : " · 第一次见"),
+      posCn: posCN(w.pos),
+      posMeta: srs.timesOf(p) > 1 ? "已学 " + srs.timesOf(p) + " 次" : "第一次见",
       memoParts: memo.parts,
       memoFam: memo.fam,
       pre1: srs.fmtDays(n1),

@@ -217,6 +217,37 @@
     return n;
   }
 
+  /* 词性：给中文名，考试新手未必认得 n./v. 这些缩写 */
+  const POS_CN = {
+    n: "名词", v: "动词", vt: "及物动词", vi: "不及物动词", adj: "形容词",
+    adv: "副词", prep: "介词", conj: "连词", pron: "代词", num: "数词",
+    art: "冠词", int: "感叹词", aux: "助动词", modal: "情态动词",
+    abbr: "缩写", phrase: "短语", phr: "短语", pl: "复数",
+  };
+
+  function posCN(pos) {
+    const raw = String(pos || "").trim();
+    if (!raw) return "";
+    const toks = raw.split(/\s*[&,，/]\s*/).filter(Boolean);
+    const out = [];
+    for (let i = 0; i < toks.length; i++) {
+      const k = toks[i].replace(/\./g, "").trim().toLowerCase();
+      const c = POS_CN[k];
+      if (!c) return "";
+      out.push(c);
+    }
+    return out.join("／");
+  }
+
+  function posHTML(pos, meta, cls) {
+    const cn = posCN(pos);
+    let h = '<div class="fc-pos' + (cls ? " " + cls : "") + '">';
+    if (cn) h += '<span class="pos-cn">' + esc(cn) + "</span>";
+    if (pos) h += '<span class="pos-abbr">' + esc(pos) + "</span>";
+    if (meta) h += '<span class="pos-meta">' + meta + "</span>";
+    return h + "</div>";
+  }
+
   /* 这个词一共学过几次（含第一次） */
   function timesOf(p) {
     if (!p) return 0;
@@ -1363,7 +1394,7 @@
         '<div class="fc-main">' +
         '<div class="fc-quiz-tag">选出正确释义</div>' +
         '<div class="fc-word">' + esc(w.w) + "</div>" +
-        '<div class="fc-pos">' + esc(w.pos) + "</div>" +
+        posHTML(w.pos) +
         "</div>" +
         '<div class="fc-options">' +
         opts
@@ -1392,7 +1423,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-word" style="color:' + (ok ? "#2e7d5b" : "#b4472a") + '">' + esc(w.w) + "</div>" +
-        '<div class="fc-pos">' + esc(w.pos) + (ok ? " · ✓ 答对了" : " · ✗ 没答对") + "</div>" +
+        posHTML(w.pos, ok ? "✓ 答对了" : "✗ 没答对") +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         memoBlock(w) +
@@ -1402,7 +1433,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-word">' + esc(w.w) + "</div>" +
-        '<div class="fc-pos">' + esc(w.pos) + "</div>" +
+        posHTML(w.pos) +
         '<div class="fc-meaning pending">先在心里回想它的意思，再翻开</div>' +
         "</div>" +
         '<div class="fc-actions">' +
@@ -1415,7 +1446,7 @@
       body =
         '<div class="fc-main">' +
         '<div class="fc-word">' + esc(w.w) + "</div>" +
-        '<div class="fc-pos">' + esc(w.pos) + " · " + (timesOf(p) > 1 ? "已学 " + timesOf(p) + " 次" : "第一次见") + "</div>" +
+        posHTML(w.pos, timesOf(p) > 1 ? "已学 " + timesOf(p) + " 次" : "第一次见") +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
         memoBlock(w) +

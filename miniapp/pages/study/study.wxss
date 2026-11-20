@@ -113,11 +113,36 @@
 }
 
 .pos {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   font-family: Menlo, Consolas, monospace;
   font-size: 24rpx;
   color: #6b7c7c;
   letter-spacing: 1rpx;
-  margin-top: 10rpx;
+  margin-top: 12rpx;
+}
+
+.pos-cn {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 22rpx;
+  letter-spacing: 1rpx;
+  color: #0b5548;
+  background: #eef1e7;
+  border: 1rpx solid #dde5da;
+  border-radius: 8rpx;
+  padding: 2rpx 12rpx;
+  margin-right: 12rpx;
+}
+
+.pos-abbr {
+  letter-spacing: 2rpx;
+  color: #6b7c7c;
+}
+
+.pos-meta {
+  margin-left: 12rpx;
+  color: #6b7c7c;
 }
 
 .meaning {

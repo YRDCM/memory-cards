@@ -947,11 +947,37 @@ textarea {
   word-break: break-word;
 }
 .fc-pos {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--muted);
-  letter-spacing: 0.08em;
-  margin-top: 6px;
+}
+.fc-pos .pos-cn {
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--accent-deep);
+  background: var(--soft);
+  border: 1px solid #dde5da;
+  border-radius: 5px;
+  padding: 1px 7px;
+  line-height: 1.5;
+}
+.fc-pos .pos-abbr {
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.fc-pos .pos-meta {
+  color: var(--muted);
+}
+.fc-pos .pos-meta::before {
+  content: "·";
+  margin-right: 6px;
+  color: var(--line);
 }
 .fc-meaning {
   font-size: 24px;

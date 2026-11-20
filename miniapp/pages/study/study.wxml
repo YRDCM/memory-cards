@@ -116,7 +116,10 @@
     <block wx:elif="{{!revealed}}">
       <view class="fc-body">
         <view class="word">{{word}}</view>
-        <view class="pos">{{pos}}</view>
+        <view class="pos">
+          <text wx:if="{{posCn}}" class="pos-cn">{{posCn}}</text>
+          <text class="pos-abbr">{{pos}}</text>
+        </view>
         <view class="hint">先在心里回想它的意思，再翻开</view>
       </view>
       <view class="fc-foot">
@@ -128,7 +131,11 @@
     <block wx:else>
       <view class="fc-body">
         <view class="word">{{word}}</view>
-        <view class="pos">{{posLine}}</view>
+        <view class="pos">
+          <text wx:if="{{posCn}}" class="pos-cn">{{posCn}}</text>
+          <text class="pos-abbr">{{pos}}</text>
+          <text class="pos-meta">· {{posMeta}}</text>
+        </view>
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
