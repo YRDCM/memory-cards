@@ -24,7 +24,7 @@
     <view class="setrow">
       <view class="grow">
         <view class="label">拼写测试</view>
-        <view class="desc">复习旧词时，看中文拼英文。更累，但记得牢。</view>
+        <view class="desc">只对「已掌握」「熟练」的词出题，先看中文拼英文。</view>
       </view>
       <switch checked="{{spelling}}" bindchange="onSpell" color="#0f6b5c" />
     </view>

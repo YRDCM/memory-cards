@@ -327,6 +327,8 @@
     const p = S.prog[w.id];
     if (!p) return "new";
     if (p.due <= Date.now()) return "due";
+    /* 间隔 3 周以上 → 熟练：这个词已经进长期记忆了 */
+    if (p.i >= 21) return "expert";
     if (p.r >= 3) return "ok";
     return "learn";
   }
@@ -822,17 +824,19 @@
     }
   }
 
-  /* 题型选择：新词永远先看卡片，复习词才上题 */
+  /* 题型选择：新词永远先看卡片；拼写只针对已掌握以上的词 */
   function pickMode(w, isNew) {
     const q = S.set.quiz || "card";
-    if (isNew) return q === "card" ? "card" : "card";
-    if (q === "card") return S.set.spelling ? "spell" : "card";
+    if (isNew) return "card";
+    const st = statusOf(w);
+    const canSpell = st === "ok" || st === "expert";
+    if (q === "card") return S.set.spelling && canSpell ? "spell" : "card";
     const canCloze = !!(w.ex && findForm(w.ex, w.w));
     if (q === "choice") return "choice";
     if (q === "cloze") return canCloze ? "cloze" : "choice";
     /* 混合：卡片 / 选择 / 填空 轮着来 */
     const r = Math.random();
-    if (r < 0.3) return S.set.spelling ? "spell" : "card";
+    if (r < 0.3) return S.set.spelling && canSpell ? "spell" : "card";
     if (r < 0.65) return "choice";
     return canCloze ? "cloze" : "choice";
   }
@@ -1521,7 +1525,8 @@
     const p = S.prog[w.id];
     const n = timesOf(p);
     const st = statusOf(w);
-    const stTxt = { new: "未学", learn: "学习中", due: "待复习", ok: "已掌握" }[st] || "未学";
+    const stTxt =
+      { new: "未学", learn: "学习中", due: "待复习", ok: "已掌握", expert: "熟练" }[st] || "未学";
     const ret = p ? Math.round(retention(p) * 100) : 0;
     const left = p ? (p.due - Date.now()) / DAY : 0;
     const nextTxt = p ? (left <= 0 ? "现在就该复习" : fmtDays(left) + "后") : "—";
@@ -1552,7 +1557,7 @@
   }
 
   function viewWords() {
-    const counts = { all: ALL.length, new: 0, learn: 0, due: 0, ok: 0 };
+    const counts = { all: ALL.length, new: 0, learn: 0, due: 0, ok: 0, expert: 0 };
     ALL.forEach((w) => {
       counts[statusOf(w)] = (counts[statusOf(w)] || 0) + 1;
     });
@@ -1562,6 +1567,7 @@
       ["learn", "学习中 " + counts.learn],
       ["due", "待复习 " + counts.due],
       ["ok", "已掌握 " + counts.ok],
+      ["expert", "熟练 " + counts.expert],
     ];
     const chips = filters
       .map(
@@ -1619,7 +1625,13 @@
     const shown = list.slice(0, 300);
     const badgeOf = (w) => {
       const s = statusOf(w);
-      const map = { new: ["new", "未学"], learn: ["learn", "学习中"], due: ["due", "待复习"], ok: ["ok", "已掌握"] };
+      const map = {
+        new: ["new", "未学"],
+        learn: ["learn", "学习中"],
+        due: ["due", "待复习"],
+        ok: ["ok", "已掌握"],
+        expert: ["expert", "熟练"],
+      };
       const b = map[s] || map.new;
       return '<span class="badge ' + b[0] + '">' + b[1] + "</span>";
     };
@@ -1726,7 +1738,7 @@
       '<div class="set-control"><input class="field" type="time" data-set="reminder" value="' + esc(S.set.reminder) + '"></div></div>' +
 
       '<div class="set-row"><div><div class="set-label">拼写测试</div>' +
-      '<div class="set-desc">复习旧词时，先看中文拼出英文。更累，但记得牢得多。</div></div>' +
+      '<div class="set-desc">复习时先看中文拼英文。只对「已掌握」「熟练」的词出题——刚学的词拼不出来是正常的。</div></div>' +
       '<div class="set-control"><button class="switch" role="switch" aria-checked="' +
       (S.set.spelling ? "true" : "false") + '" data-act="toggle-spell" aria-label="拼写测试"></button></div></div>' +
 

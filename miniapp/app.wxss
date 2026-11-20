@@ -170,6 +170,11 @@ page {
   background: #dceae3;
 }
 
+.badge-expert {
+  color: #14425a;
+  background: #dfeaf2;
+}
+
 /* ---------- 进度条 ---------- */
 
 .bar {

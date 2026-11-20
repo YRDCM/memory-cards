@@ -289,17 +289,18 @@ Page({
     this.paint();
   },
 
-  /** 新词永远先看卡片；复习词才上题 */
+  /** 新词永远先看卡片；拼写只针对已掌握以上的词 */
   pickMode(w, isNew) {
     const q = store.state().set.quiz || "card";
-    const spelling = !!store.state().set.spelling;
     if (isNew) return "card";
-    if (q === "card") return spelling ? "spell" : "card";
+    const st = store.statusOf(w);
+    const canSpell = !!store.state().set.spelling && (st === "ok" || st === "expert");
+    if (q === "card") return canSpell ? "spell" : "card";
     const canCloze = !!(w.ex && findForm(w.ex, w.w));
     if (q === "choice") return "choice";
     if (q === "cloze") return canCloze ? "cloze" : "choice";
     const r = Math.random();
-    if (r < 0.3) return spelling ? "spell" : "card";
+    if (r < 0.3) return canSpell ? "spell" : "card";
     if (r < 0.65) return "choice";
     return canCloze ? "cloze" : "choice";
   },

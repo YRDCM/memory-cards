@@ -27,7 +27,7 @@ Page({
   rebuild(keepCount) {
     const ALL = store.all();
     if (!keepCount) {
-      const c = { all: ALL.length, new: 0, learn: 0, due: 0, ok: 0 };
+      const c = { all: ALL.length, new: 0, learn: 0, due: 0, ok: 0, expert: 0 };
       for (let i = 0; i < ALL.length; i++) c[store.statusOf(ALL[i])] += 1;
       this.setData({ counts: c });
     }
@@ -69,8 +69,16 @@ Page({
         pos: w.pos,
         cn: w.cn,
         times: n > 1 ? n : 0,
-        label: s === "new" ? "未学" : s === "due" ? "待复习" : s === "ok" ? "已掌握" : "学习中",
-        cls: s === "new" ? "badge-new" : s === "due" ? "badge-due" : s === "ok" ? "badge-ok" : "badge-learn",
+        label:
+          s === "new" ? "未学" :
+          s === "due" ? "待复习" :
+          s === "expert" ? "熟练" :
+          s === "ok" ? "已掌握" : "学习中",
+        cls:
+          s === "new" ? "badge-new" :
+          s === "due" ? "badge-due" :
+          s === "expert" ? "badge-expert" :
+          s === "ok" ? "badge-ok" : "badge-learn",
       });
     }
     this.setData({

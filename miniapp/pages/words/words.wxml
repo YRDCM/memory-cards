@@ -6,6 +6,7 @@
     <view class="chip {{filter === 'learn' ? 'chip-on' : ''}}" data-f="learn" bindtap="onFilter">学习中 {{counts.learn}}</view>
     <view class="chip {{filter === 'due' ? 'chip-on' : ''}}" data-f="due" bindtap="onFilter">待复习 {{counts.due}}</view>
     <view class="chip {{filter === 'ok' ? 'chip-on' : ''}}" data-f="ok" bindtap="onFilter">已掌握 {{counts.ok}}</view>
+    <view class="chip {{filter === 'expert' ? 'chip-on' : ''}}" data-f="expert" bindtap="onFilter">熟练 {{counts.expert}}</view>
   </view>
 
   <input class="input search" placeholder="搜索单词或释义" value="{{query}}" bindinput="onSearch" />

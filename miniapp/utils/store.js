@@ -211,6 +211,8 @@ function statusOf(w) {
   const p = S.prog[w.id];
   if (!p) return "new";
   if (p.due <= Date.now()) return "due";
+  // 间隔 3 周以上 → 熟练：这个词已经进长期记忆了
+  if (p.i >= 21) return "expert";
   if (p.r >= 3) return "ok";
   return "learn";
 }

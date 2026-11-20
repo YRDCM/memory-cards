@@ -847,6 +847,11 @@ textarea {
   color: var(--accent-deep);
   background: var(--soft);
 }
+.badge.expert {
+  color: #14425a;
+  background: #dfeaf2;
+  border-color: #cfe0ec;
+}
 
 /* ---------- 学习卡片 ---------- */
 
