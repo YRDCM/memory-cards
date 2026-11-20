@@ -240,6 +240,48 @@
   font-size: 40rpx;
 }
 
+/* ---------- 联想记忆 ---------- */
+
+.fmemo {
+  margin-top: 26rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #d6dbd0;
+}
+
+.fmemo-head {
+  display: flex;
+  align-items: center;
+}
+
+.fmemo-k {
+  font-size: 20rpx;
+  letter-spacing: 2rpx;
+  color: #6b7c7c;
+}
+
+.fmemo-edit {
+  margin-left: auto;
+  font-size: 22rpx;
+  color: #0b5548;
+  border: 1rpx solid #d6dbd0;
+  border-radius: 10rpx;
+  padding: 4rpx 18rpx;
+}
+
+.fmemo-text {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: #16262b;
+}
+
+.fmemo-hint {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #8c9b98;
+}
+
 /* ---------- 复习题型 ---------- */
 
 .quiz-tag {

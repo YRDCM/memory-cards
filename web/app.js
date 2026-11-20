@@ -71,6 +71,7 @@
     return {
       v: 1,
       prog: {},
+      memo: {},
       custom: [],
       daily: {},
       set: Object.assign({}, DEFAULT_SET),
@@ -97,6 +98,7 @@
       return {
         v: 1,
         prog: s.prog || {},
+        memo: s.memo || {},
         custom: Array.isArray(s.custom) ? s.custom : [],
         daily: s.daily || {},
         set: set,
@@ -377,7 +379,7 @@
     !!S.set.syncCode && S.set.syncOn !== false && location.protocol !== "file:";
 
   function exportState() {
-    return { v: 1, prog: S.prog, custom: S.custom, daily: S.daily, set: S.set, meta: S.meta };
+    return { v: 1, prog: S.prog, memo: S.memo, custom: S.custom, daily: S.daily, set: S.set, meta: S.meta };
   }
 
   function newSyncCode() {
@@ -404,6 +406,13 @@
       } else {
         prog[k] = Object.assign({}, b, { n: Math.max(timesOf(a), timesOf(b)) });
       }
+    });
+
+    const memo = Object.assign({}, remote.memo || {});
+    Object.keys(S.memo || {}).forEach((k) => {
+      const a = S.memo[k];
+      const b = memo[k];
+      if (!b || (a && a.at || 0) >= (b.at || 0)) memo[k] = a;
     });
 
     const rd = remote.daily || {};
@@ -435,6 +444,7 @@
       daily,
       custom,
       bestStreak: Math.max(S.meta.bestStreak || 0, (remote.meta && remote.meta.bestStreak) || 0),
+      memo: memo,
       set: mergeSet(remote.set),
     };
   }
@@ -457,6 +467,7 @@
     if (!m) return;
     applyingRemote = true;
     S.prog = m.prog;
+    S.memo = m.memo || {};
     S.daily = m.daily;
     S.custom = m.custom;
     if (m.set) S.set = m.set;
@@ -1374,6 +1385,74 @@
     return s.length > 8 ? s.slice(0, 8) : s;
   }
 
+  /* ---------- 联想记忆：自己写的那句话 ---------- */
+
+  let memoEditId = "";
+
+  function myMemo(w) {
+    const m = (S.memo || {})[w.id];
+    return m && m.t ? m.t : "";
+  }
+
+  const MEMO_HINT =
+    "三种起手式：① 读音像什么中文？（am·bu·lance →「俺不能死」）② 能拆成哪几块？（business = busi + ness）③ 编一个荒诞的画面。" +
+    "自己写的最管用——下次翻到背面会先看到它。";
+
+  function fmemoHTML(w) {
+    const t = myMemo(w);
+    return (
+      '<div class="fmemo">' +
+      '<div class="fmemo-head"><span class="fmemo-k">联想</span>' +
+      '<button class="fmemo-edit" data-act="memo-edit" data-id="' + esc(w.id) + '">' +
+      (t ? "改" : "写一个") + "</button></div>" +
+      (t
+        ? '<div class="fmemo-text">' + esc(t) + "</div>"
+        : '<div class="fmemo-hint">' + MEMO_HINT + "</div>") +
+      "</div>"
+    );
+  }
+
+  function memoModalHTML() {
+    if (!memoEditId) return "";
+    const w = MAP.get(memoEditId);
+    if (!w) return "";
+    const t = myMemo(w);
+    return (
+      '<div class="mmodal" data-act="memo-close">' +
+      '<div class="mmodal-card">' +
+      '<div class="mm-head"><div>' +
+      '<div class="mm-word">' + esc(w.w) + "</div>" +
+      ipaLine(w, "wm-ipa") +
+      '<div class="mm-cn">' + esc(w.cn) + "</div>" +
+      "</div></div>" +
+      '<div class="mm-hint">' + MEMO_HINT + "</div>" +
+      '<textarea class="mm-input" id="mm-text" rows="4" placeholder="比如：读音像「俺不能死」，救护车来了就是救命……">' +
+      esc(t) +
+      "</textarea>" +
+      '<div class="mm-foot">' +
+      (t ? '<button class="btn btn-danger" data-act="memo-del">删除</button>' : "<span></span>") +
+      '<div class="mm-actions">' +
+      '<button class="btn" data-act="memo-close">取消</button>' +
+      '<button class="btn btn-primary" data-act="memo-save">保存</button>' +
+      "</div></div>" +
+      "</div></div>"
+    );
+  }
+
+  function saveMemo() {
+    const id = memoEditId;
+    if (!id) return;
+    const el = $("#mm-text");
+    const t = (el ? el.value : "").trim();
+    S.memo = S.memo || {};
+    if (t) S.memo[id] = { t: t.slice(0, 400), at: Date.now() };
+    else delete S.memo[id];
+    memoEditId = "";
+    save();
+    render();
+    toast(t ? "记下了，翻面时会看到" : "已删除");
+  }
+
   function memoBlock(w) {
     const parts = splitWord(w);
     const used = {};
@@ -1487,7 +1566,7 @@
         posHTML(w.pos, ok ? "✓ 答对了" : "✗ 没答对") +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
-        memoBlock(w) +
+        memoBlock(w) + fmemoHTML(w) +
         "</div>" +
         '<div class="fc-actions"><button class="btn btn-primary btn-lg" data-act="quiz-next">继续（Enter）</button></div>';
     } else if (!session.revealed) {
@@ -1510,7 +1589,7 @@
         posHTML(w.pos, timesOf(p) > 1 ? "已学 " + timesOf(p) + " 次" : "第一次见") +
         '<div class="fc-meaning">' + esc(w.cn) + "</div>" +
         (w.ex ? '<div class="fc-ex">' + esc(w.ex) + exBtn(w.ex) + "</div>" + '<div class="fc-excn">' + esc(w.excn) + "</div>" : "") +
-        memoBlock(w) +
+        memoBlock(w) + fmemoHTML(w) +
         "</div>" +
         '<div class="grade-row">' +
         '<button class="grade again" data-act="grade" data-g="1"><b>忘了</b><span>' + fmtDays(n1) + "</span></button>" +
@@ -1571,7 +1650,7 @@
       "</div></div>" +
       '<div class="wm-cn">' + esc(w.cn) + "</div>" +
       (w.ex ? '<div class="wm-ex">' + esc(w.ex) + exBtn(w.ex) + '</div><div class="wm-excn">' + esc(w.excn) + "</div>" : "") +
-      memoBlock(w) +
+      memoBlock(w) + fmemoHTML(w) +
       '<div class="wm-stats">' +
       '<div class="wm-stat"><b>' + n + "</b><span>学过次数</span></div>" +
       '<div class="wm-stat"><b>' + (p ? ret + "%" : "—") + "</b><span>现在记得</span></div>" +
@@ -1877,6 +1956,7 @@
       "</div></div></header>" +
       '<div class="shell' + (v === "study" ? " is-study" : "") + '">' + (storageOK ? "" : warnBar()) + body + "</div>" +
       (v === "study" ? "" : '<nav class="tabbar">' + tabs + "</nav>") +
+      memoModalHTML() +
       '<div class="toast-wrap" id="toasts"></div>';
 
     document.title = "记忆卡片盒";
@@ -2036,6 +2116,34 @@
       S.set.at = Date.now();
       save();
       render();
+      return;
+    }
+    if (act === "memo-edit") {
+      memoEditId = el.dataset.id || "";
+      render();
+      const box = document.getElementById("mm-text");
+      if (box) {
+        box.focus();
+        box.setSelectionRange(box.value.length, box.value.length);
+      }
+      return;
+    }
+    if (act === "memo-close") {
+      if (e.target.closest(".mmodal-card")) return;
+      memoEditId = "";
+      render();
+      return;
+    }
+    if (act === "memo-save") {
+      saveMemo();
+      return;
+    }
+    if (act === "memo-del") {
+      if (memoEditId) delete (S.memo || {})[memoEditId];
+      memoEditId = "";
+      save();
+      render();
+      toast("已删除");
       return;
     }
     if (act === "word-open") {

@@ -79,8 +79,16 @@ function merge(local, remote) {
     custom.push(w);
   });
 
+  const memo = Object.assign({}, remote.memo || {});
+  Object.keys(local.memo || {}).forEach(function (k) {
+    const a = local.memo[k];
+    const b = memo[k];
+    if (!b || ((a && a.at) || 0) >= (b.at || 0)) memo[k] = a;
+  });
+
   return {
     prog: prog,
+    memo: memo,
     daily: daily,
     custom: custom,
     bestStreak: Math.max(
@@ -108,6 +116,7 @@ function mergeSet(local, remote) {
 function apply(merged) {
   const S = store.state();
   S.prog = merged.prog;
+  S.memo = merged.memo || {};
   S.daily = merged.daily;
   S.custom = merged.custom;
   if (merged.set) S.set = merged.set;
@@ -118,7 +127,7 @@ function apply(merged) {
 
 function exportState() {
   const S = store.state();
-  return { v: 1, prog: S.prog, custom: S.custom, daily: S.daily, set: S.set, meta: S.meta };
+  return { v: 1, prog: S.prog, memo: S.memo, custom: S.custom, daily: S.daily, set: S.set, meta: S.meta };
 }
 
 async function push() {

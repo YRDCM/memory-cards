@@ -139,6 +139,14 @@
         <view class="meaning">{{cn}}</view>
         <view wx:if="{{ex}}" class="ex">{{ex}}<text class="ex-say" catchtap="onSpeakEx"> 🔊</text></view>
         <view wx:if="{{excn}}" class="excn">{{excn}}</view>
+        <view class="fmemo">
+          <view class="fmemo-head">
+            <text class="fmemo-k">联想</text>
+            <text class="fmemo-edit" catchtap="onMemo">{{memoText ? '改' : '写一个'}}</text>
+          </view>
+          <view wx:if="{{memoText}}" class="fmemo-text">{{memoText}}</view>
+          <view wx:else class="fmemo-hint">读音像什么中文？能拆成哪几块？编个荒诞画面。点「写一个」记下来。</view>
+        </view>
 
         <view wx:if="{{memoParts.length || memoFam.length}}" class="memo">
           <view wx:if="{{memoParts.length}}" class="memo-row">

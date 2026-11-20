@@ -37,6 +37,7 @@ function shiftKey(k, n) {
 function fresh() {
   return {
     prog: {},
+    memo: {},
     custom: [],
     daily: {},
     set: Object.assign({}, DEFAULT_SET),
@@ -112,6 +113,7 @@ function init() {
     const base = fresh();
     S = {
       prog: raw.prog || {},
+      memo: raw.memo || {},
       custom: Array.isArray(raw.custom) ? raw.custom : [],
       daily: raw.daily || {},
       set: Object.assign({}, base.set, raw.set || {}),
@@ -150,6 +152,19 @@ function day(k) {
   const key = k || todayKey();
   if (!S.daily[key]) S.daily[key] = { cards: 0, sec: 0, newW: 0, reviews: 0, correct: 0 };
   return S.daily[key];
+}
+
+function setMemo(id, text) {
+  S.memo = S.memo || {};
+  const t = String(text || '').trim();
+  if (t) S.memo[id] = { t: t.slice(0, 400), at: Date.now() };
+  else delete S.memo[id];
+  save();
+}
+
+function getMemo(id) {
+  const m = (S.memo || {})[id];
+  return m && m.t ? m.t : '';
 }
 
 function dueList() {
@@ -305,6 +320,8 @@ module.exports = {
   shiftKey: shiftKey,
   keyToDate: keyToDate,
   dueList: dueList,
+  setMemo: setMemo,
+  getMemo: getMemo,
   planToday: planToday,
   learnedCount: learnedCount,
   avgRetention: avgRetention,

@@ -1422,6 +1422,126 @@ textarea {
   }
 }
 
+/* ---------- 联想记忆 ---------- */
+
+.fmemo {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+.fmemo-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fmemo-k {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.fmemo-edit {
+  margin-left: auto;
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 7px;
+  padding: 2px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease;
+}
+.fmemo-edit:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+.fmemo-text {
+  margin-top: 7px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+.fmemo-hint {
+  margin-top: 7px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* 编辑弹窗 */
+.mmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 230;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(22, 38, 43, 0.42);
+  cursor: pointer;
+  animation: mapIn 0.16s ease;
+}
+.mmodal-card {
+  width: min(520px, 100%);
+  max-height: 86vh;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px 20px;
+  cursor: default;
+  box-shadow: 0 40px 90px -46px rgba(22, 38, 43, 0.9);
+}
+.mm-word {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.2;
+}
+.mm-cn {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.mm-hint {
+  margin-top: 14px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.mm-input {
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+  padding: 11px 13px;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: var(--font-body);
+  color: var(--ink);
+  resize: vertical;
+}
+.mm-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.mm-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.mm-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
 /* ---------- 统计 ---------- */
 
 .stat-grid {

@@ -235,6 +235,7 @@ Page({
     quizTag: "",
     hintCn: "",
     ipa: "",
+    memoText: "",
     posCn: "",
     posMeta: "",
     memoParts: [],
@@ -270,6 +271,27 @@ Page({
     const s = this.data.ex;
     if (!s) return;
     tts.speakSentence(s);
+  },
+
+  /** 写联想：弹一个可输入的对话框，存进本地并同步 */
+  onMemo() {
+    const s = this.session;
+    if (!s) return;
+    const id = s.q[s.idx];
+    if (!id) return;
+    const cur = store.getMemo(id);
+    wx.showModal({
+      title: "写个联想 · " + (this.data.word || ""),
+      editable: true,
+      placeholderText: "读音像什么？能拆成哪几块？",
+      content: cur,
+      success: (r) => {
+        if (!r.confirm) return;
+        store.setMemo(id, r.content || "");
+        this.setData({ memoText: store.getMemo(id) });
+        sync.schedule();
+      },
+    });
   },
 
   startSession(extraNew, reviewOnly) {
@@ -335,6 +357,7 @@ Page({
       pct: Math.round((s.done / Math.max(s.done + (s.q.length - s.idx), 1)) * 100),
       word: w.w,
       ipa: w.ipa || "",
+      memoText: store.getMemo(id),
       pos: w.pos,
       cn: w.cn,
       ex: w.ex,
