@@ -730,8 +730,9 @@
     /* dailyNew 是每轮的配给量，不是每日上限 —— 想多学随时再开一轮 */
     const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
     /* 复习也按一轮的量发放：昨天背了三轮，今天不会被三倍的复习压垮。
-       剩下的留在池子里，下一轮接着来，不丢。 */
-    const revCap = quota;
+       剩下的留在池子里，下一轮接着来，不丢。
+       纯复习模式例外 —— 你都说了只复习，那就一次清干净。 */
+    const revCap = reviewOnly ? reviews.length : quota;
     const pool = reviews.slice(0, revCap * 2);
     shuffle(pool);
     const picks = pool.slice(0, revCap);
@@ -1182,8 +1183,8 @@
           (due > quota ? "（共 " + due + "）" : "") + " + 新词 " + quota) +
       "</button>" +
       (due > 0
-        ? '<button class="btn btn-lg btn-review" data-act="review-only" title="只复习到期的词，不学新词">' +
-          (isNarrow() ? "只复习" : "只复习 " + Math.min(due, quota)) +
+        ? '<button class="btn btn-lg btn-review" data-act="review-only" title="复习全部到期的词，不学新词">' +
+          (isNarrow() ? "只复习" : "只复习 " + due) +
           "</button>"
         : "") +
       "</div>";

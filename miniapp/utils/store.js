@@ -249,8 +249,8 @@ function buildQueue(extraNew, reviewOnly) {
     return ((S.prog[a.id] || {}).due || 0) - ((S.prog[b.id] || {}).due || 0);
   });
   const quota = Math.max(0, S.set.dailyNew + (extraNew || 0));
-  // 复习也按一轮的量发放，剩下的留到下一轮
-  const revCap = quota;
+  // 复习也按一轮的量发放，剩下的留到下一轮；纯复习模式一次清干净
+  const revCap = reviewOnly ? reviews.length : quota;
   const pool = reviews.slice(0, revCap * 2);
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
